@@ -14,6 +14,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- AutoMapper 12.0.1 (see SkyShift.Application.csproj for the
+         version-pin rationale) does not include its own
+         IServiceCollection.AddAutoMapper(...) extension; that lives in
+         this separate package for AutoMapper versions before 13.0.0.
+         Pinned to the exact same 12.0.1 to match the core package. -->
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <!-- Swagger/OpenAPI (Development-only usage configured in Program.cs). -->
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
     <!-- JWT generation (Stage 2, JwtTokenService) and, in a later approved
