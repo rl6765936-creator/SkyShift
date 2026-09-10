@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>SkyShift.Api</RootNamespace>
+    <UserSecretsId>42123ccb-b5df-4bc2-9a2f-9119f829fcde</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SkyShift.Application\SkyShift.Application.csproj" />
+    <ProjectReference Include="..\SkyShift.Infrastructure\SkyShift.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Swagger/OpenAPI (Development-only usage configured in Program.cs). -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+    <!-- JWT generation (Stage 2, JwtTokenService) and, in a later approved
+         stage, JWT Bearer validation (AddJwtBearer). -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.31" />
+    <!-- EF Core Tools require a direct reference to this package in the
+         startup project (SkyShift.Api), independent of the reference
+         already present in SkyShift.Infrastructure (PrivateAssets="all"
+         does not flow transitively through ProjectReference). -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <!-- Part D of the course spec: NLog.Web.AspNetCore, settings in
+         nlog.config. The application code keeps using the plain
+         Microsoft.Extensions.Logging.ILogger<T> everywhere; NLog is
+         wired in underneath, in Program.cs, as the provider that actually
+         writes the log events out. -->
+    <PackageReference Include="NLog.Web.AspNetCore" Version="5.3.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- nlog.config is read from the output directory at startup, so it
+         must be copied there like appsettings*.json already are. -->
+    <None Update="nlog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

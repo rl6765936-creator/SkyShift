@@ -1,0 +1,23 @@
+## .NET build output
+bin/
+obj/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## NLog runtime output (generated at run time, not source)
+src/SkyShift.Api/logs/
+src/SkyShift.Api/internal-nlog*.txt
+src/SkyShift.Api/bin/**/internal-nlog*.txt
+
+## Test results
+[Tt]est[Rr]esult*/
+*.trx
+
+## Rider / VS Code (harmless if unused on this machine)
+.idea/
+.vscode/
