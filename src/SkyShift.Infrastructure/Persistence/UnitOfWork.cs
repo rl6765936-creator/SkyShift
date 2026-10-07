@@ -45,6 +45,11 @@ public class UnitOfWork : IUnitOfWork
             await _context.SaveChangesAsync(cancellationToken);
             await _context.CommitTransactionAsync(cancellationToken);
         }
+        catch (DbUpdateException ex) when (IsDuplicateFlight(ex))
+        {
+            await _context.RollbackTransactionAsync(cancellationToken);
+            throw new DuplicateFlightException();
+        }
         catch (DbUpdateConcurrencyException ex)
         {
             var vehicleEntry = ex.Entries.FirstOrDefault(e => e.Entity is Vehicle);
@@ -124,6 +129,20 @@ public class UnitOfWork : IUnitOfWork
         for (var inner = ex.InnerException; inner is not null; inner = inner.InnerException)
         {
             if (inner is SqlException sqlEx && (sqlEx.Number == 1205 || sqlEx.Number == 1222))
+                return true;
+        }
+
+        return false;
+    }
+    private static bool IsDuplicateFlight(DbUpdateException exception)
+    {
+        if (!exception.Entries.Any(e => e.Entity is Flight))
+            return false;
+
+        for (var inner = exception.InnerException; inner is not null; inner = inner.InnerException)
+        {
+            if (inner is SqlException sql && (sql.Number == 2601 || sql.Number == 2627)
+                && sql.Message.Contains("IX_Flights_UserId_Date", StringComparison.Ordinal))
                 return true;
         }
 

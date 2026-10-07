@@ -33,7 +33,7 @@ public class RegisterUserUseCase
             throw new InvalidOperationException($"Email '{request.Email}' is already registered.");
 
         var passwordHash = _passwordHasher.Hash(request.Password);
-        var user = User.Create(request.Name, request.Email, request.AverageDailyTrips, passwordHash);
+        var user = User.Create(request.Name, request.Email, request.AverageDailyTrips, passwordHash, request.Gender);
 
         await _userRepository.AddAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

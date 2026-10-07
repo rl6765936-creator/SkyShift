@@ -83,7 +83,12 @@ if (string.IsNullOrWhiteSpace(connectionString))
 
 builder.Services.AddInfrastructure(connectionString);
 
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddAutoMapper(config =>
+{
+    var licenseKey = builder.Configuration["AutoMapper:LicenseKey"];
+    if (!string.IsNullOrWhiteSpace(licenseKey))
+        config.LicenseKey = licenseKey;
+}, typeof(MappingProfile));
 
 // Use Cases are registered as concrete classes (no interfaces/abstractions),
 // Scoped to match the lifetime of the Repositories/IUnitOfWork they depend
@@ -93,6 +98,7 @@ builder.Services.AddScoped<LoginUserUseCase>();
 builder.Services.AddScoped<GetAvailableVehiclesUseCase>();
 builder.Services.AddScoped<SelectVehicleUseCase>();
 builder.Services.AddScoped<GetUserVehicleUseCase>();
+builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
 builder.Services.AddScoped<RecordFlightUseCase>();
 builder.Services.AddScoped<GetUserDashboardUseCase>();
 

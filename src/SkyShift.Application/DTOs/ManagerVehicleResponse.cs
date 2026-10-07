@@ -8,6 +8,11 @@ namespace SkyShift.Application.DTOs;
 // User-facing contract.
 public class ManagerVehicleResponse
 {
+    public string? ModelName { get; set; }
+    public int? MaxSpeedKmh { get; set; }
+    public int? Seats { get; set; }
+    public string? ImageUrl { get; set; }
+
     public int Id { get; set; }
 
     // Serialized as its name ("Available", "Retired", ...), not the

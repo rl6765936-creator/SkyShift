@@ -1,12 +1,22 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace SkyShift.Application.DTOs;
 
-// No Status and no CreatedAt fields, by design: a newly created Vehicle
-// always starts Available, and CreatedAt is always server-generated
-// (DateTime.UtcNow) inside CreateVehicleUseCase. Neither can be supplied
-// by the client because neither exists on this DTO to bind to.
-//
-// No Data Annotations: bool has no invalid state to validate against.
 public class CreateVehicleRequest
 {
     public bool IsPersonalExperimental { get; set; }
+
+    [StringLength(200, MinimumLength = 1)]
+    [RegularExpression(@".*\S.*", ErrorMessage = "Model name cannot be blank.")]
+    public string? ModelName { get; set; }
+
+    [Range(1, 2000)]
+    public int? MaxSpeedKmh { get; set; }
+
+    [Range(1, 100)]
+    public int? Seats { get; set; }
+
+    [StringLength(2048, MinimumLength = 1)]
+    [RegularExpression(@"^(https?://[^\s\\]+|/(?!/)[^\s\\]*)$", ErrorMessage = "Image URL must be an HTTP(S) URL or a root-relative asset path.")]
+    public string? ImageUrl { get; set; }
 }

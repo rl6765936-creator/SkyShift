@@ -15,6 +15,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.Id)
             .ValueGeneratedOnAdd();
 
+        builder.Property(u => u.Gender).HasConversion<string>().HasMaxLength(10);
+
         builder.Property(u => u.Name)
             .IsRequired()
             .HasMaxLength(200);

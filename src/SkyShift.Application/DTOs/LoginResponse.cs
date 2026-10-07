@@ -1,4 +1,5 @@
 using SkyShift.Domain.Enums;
+using System.Text.Json.Serialization;
 
 namespace SkyShift.Application.DTOs;
 
@@ -6,6 +7,9 @@ namespace SkyShift.Application.DTOs;
 // not-yet-decided Authentication topic (see PROJECT_DECISIONS.md).
 public class LoginResponse
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public UserGender? Gender { get; set; }
+
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;

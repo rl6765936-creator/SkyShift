@@ -56,6 +56,7 @@ public class AuthController : ControllerBase
 
         var response = new LoginApiResponse
         {
+            Gender = registerResult.Gender,
             Id = registerResult.Id,
             Name = registerResult.Name,
             Email = registerResult.Email,
@@ -95,6 +96,7 @@ public class AuthController : ControllerBase
 
         var response = new LoginApiResponse
         {
+            Gender = loginResult.Gender,
             Id = loginResult.Id,
             Name = loginResult.Name,
             Email = loginResult.Email,

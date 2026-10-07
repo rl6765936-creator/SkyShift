@@ -28,6 +28,8 @@ public class CreateVehicleUseCase
     {
         var vehicle = Vehicle.Create(request.IsPersonalExperimental, DateTime.UtcNow);
 
+        vehicle.SetCatalogDetails(request.ModelName, request.MaxSpeedKmh, request.Seats, request.ImageUrl);
+
         await _vehicleRepository.AddAsync(vehicle, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

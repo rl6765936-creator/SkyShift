@@ -1,9 +1,7 @@
 namespace SkyShift.Application.DTOs;
 
-// No Data Annotations: any DateTime value is syntactically valid here: a
-// business rule such as "not in the future" belongs to the Use Case /
-// Domain, not to API-boundary input validation.
 public class RecordFlightRequest
 {
+    // ISO 8601 UTC, e.g. 2026-10-06T15:30:00Z. Trial validation runs in Domain.
     public DateTime Date { get; set; }
 }

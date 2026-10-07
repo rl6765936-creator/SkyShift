@@ -4,6 +4,8 @@ namespace SkyShift.Application.Abstractions;
 
 public interface IFlightRepository
 {
+    Task<bool> ExistsAsync(int userId, DateTime date, CancellationToken cancellationToken = default);
+
     Task AddAsync(Flight flight, CancellationToken cancellationToken = default);
 
     /// <summary>

@@ -17,6 +17,7 @@ public class User
     public string Email { get; private set; }
     public int AverageDailyTrips { get; private set; }
     public string PasswordHash { get; private set; }
+    public UserGender? Gender { get; private set; }
 
     /// <summary>
     /// Always User for any User created through User.Create -- there is no
@@ -58,9 +59,12 @@ public class User
         Role = UserRole.User;
     }
 
-    public static User Create(string name, string email, int averageDailyTrips, string passwordHash)
+    public static User Create(string name, string email, int averageDailyTrips, string passwordHash, UserGender? gender = null)
     {
-        return new User(name, email, averageDailyTrips, passwordHash);
+        if (gender.HasValue && !Enum.IsDefined(gender.Value))
+            throw new ArgumentOutOfRangeException(nameof(gender));
+
+        return new User(name, email, averageDailyTrips, passwordHash) { Gender = gender };
     }
 
     /// <summary>

@@ -15,6 +15,11 @@ public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
         builder.Property(v => v.Id)
             .ValueGeneratedOnAdd();
 
+        builder.Property(v => v.ModelName).HasMaxLength(200);
+        builder.Property(v => v.MaxSpeedKmh);
+        builder.Property(v => v.Seats);
+        builder.Property(v => v.ImageUrl).HasMaxLength(2048);
+
         // Persisted as string, not the enum's numeric value: VehicleStatus
         // has already lost a member once (Reserved), and numeric storage
         // would silently corrupt existing rows if members are ever

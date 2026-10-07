@@ -48,7 +48,8 @@ namespace SkyShift.Infrastructure.Migrations
 
                     b.HasIndex("VehicleId");
 
-                    b.HasIndex("UserId", "Date");
+                    b.HasIndex("UserId", "Date")
+                        .IsUnique();
 
                     b.ToTable("Flights", (string)null);
                 });
@@ -68,6 +69,10 @@ namespace SkyShift.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Gender")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -106,13 +111,27 @@ namespace SkyShift.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("nvarchar(2048)");
+
                     b.Property<bool>("IsPersonalExperimental")
                         .HasColumnType("bit");
+
+                    b.Property<int?>("MaxSpeedKmh")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ModelName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
+
+                    b.Property<int?>("Seats")
+                        .HasColumnType("int");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -169,17 +188,31 @@ namespace SkyShift.Infrastructure.Migrations
 
             modelBuilder.Entity("SkyShift.Domain.Entities.VehicleAssignment", b =>
                 {
-                    b.HasOne("SkyShift.Domain.Entities.User", null)
-                        .WithMany()
+                    b.HasOne("SkyShift.Domain.Entities.User", "User")
+                        .WithMany("VehicleAssignments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("SkyShift.Domain.Entities.Vehicle", null)
-                        .WithMany()
+                    b.HasOne("SkyShift.Domain.Entities.Vehicle", "Vehicle")
+                        .WithMany("VehicleAssignments")
                         .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("SkyShift.Domain.Entities.User", b =>
+                {
+                    b.Navigation("VehicleAssignments");
+                });
+
+            modelBuilder.Entity("SkyShift.Domain.Entities.Vehicle", b =>
+                {
+                    b.Navigation("VehicleAssignments");
                 });
 #pragma warning restore 612, 618
         }

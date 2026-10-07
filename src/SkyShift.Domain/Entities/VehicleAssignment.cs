@@ -55,4 +55,19 @@ public class VehicleAssignment
     {
         return asOf >= StartDate && asOf <= EndDate;
     }
+    /// <summary>Uses the same inclusive trial boundaries as IsActive.</summary>
+    public void ValidateFlightDate(DateTime flightDate, DateTime nowUtc)
+    {
+        if (flightDate.Kind != DateTimeKind.Utc)
+            throw new SkyShift.Domain.Exceptions.InvalidFlightDateException(
+                "flight_time_zone_required", "Flight date must include a UTC time zone (Z).");
+
+        if (flightDate < StartDate || flightDate > EndDate)
+            throw new SkyShift.Domain.Exceptions.InvalidFlightDateException(
+                "flight_outside_trial", "Flight date must be within the vehicle assignment trial period.");
+
+        if (flightDate > nowUtc)
+            throw new SkyShift.Domain.Exceptions.InvalidFlightDateException(
+                "flight_in_future", "Flight date cannot be in the future.");
+    }
 }

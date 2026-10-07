@@ -12,32 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Teacher requirement: replaces the plain, manual, field-by-field
-         "new XResponse { ... }" Entity to DTO copies in the Use Cases with
-         AutoMapper, where those copies are a pure 1:1 property match. See
-         Mapping/MappingProfile.cs for exactly which ones.
-
-         Pinned at 12.0.1 deliberately, not left behind by accident. 12.0.1
-         is affected by GHSA-rvv3-g6hj-g44x / CVE-2026-32933, a denial of
-         service via uncontrolled recursion when mapping deeply nested
-         object graphs. The only versions that contain the fix (15.1.1+ or
-         16.1.1+) are also the first versions under AutoMapper's new RPL-1.5
-         plus commercial dual license, which made AddAutoMapper's signature
-         a breaking change (it now requires an
-         Action of IMapperConfigurationExpression as its first argument, to
-         carry a license key) plus a new MapperConfiguration constructor
-         requirement. That is not a safe drop-in version bump, and it is not
-         something verifiable from this environment, which has no
-         dotnet/NuGet access to actually build and run a newer version.
-         Practically, this project's exposure is low regardless: every
-         CreateMap in MappingProfile.cs maps a flat Domain entity with only
-         scalar properties, never a self-referencing or deeply-nested graph,
-         to a DTO, and AutoMapper here only ever runs on trusted, already
-         persisted Domain data on the way out to a response, never on
-         client-supplied input, so the recursion-depth DoS has no reachable
-         trigger in this codebase's actual usage. See the AutoMapper-upgrade
-         task's report for the full analysis. -->
-    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <!-- Teacher-required mapping; 15.1.1 includes the recursion security fix. -->
+    <PackageReference Include="AutoMapper" Version="15.1.1" />
   </ItemGroup>
 
 </Project>

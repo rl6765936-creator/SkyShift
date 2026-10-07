@@ -46,6 +46,6 @@ public class FlightConfiguration : IEntityTypeConfiguration<Flight>
 
         // Supports GetCompletedCountAsync's WHERE UserId = @userId AND Date
         // BETWEEN @start AND @end.
-        builder.HasIndex(f => new { f.UserId, f.Date });
+        builder.HasIndex(f => new { f.UserId, f.Date }).IsUnique();
     }
 }

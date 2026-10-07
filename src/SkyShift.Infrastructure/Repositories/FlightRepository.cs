@@ -14,6 +14,12 @@ public class FlightRepository : IFlightRepository
         _context = context;
     }
 
+    public Task<bool> ExistsAsync(int userId, DateTime date, CancellationToken cancellationToken = default)
+    {
+        return _context.Flights.AsNoTracking()
+            .AnyAsync(f => f.UserId == userId && f.Date == date, cancellationToken);
+    }
+
     // Not part of the SelectVehicle critical path -- Flight persistence is
     // unrelated to the VehicleAssignment concurrency race.
     public async Task AddAsync(Flight flight, CancellationToken cancellationToken = default)

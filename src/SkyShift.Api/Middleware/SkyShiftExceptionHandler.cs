@@ -53,18 +53,39 @@ public class SkyShiftExceptionHandler : IExceptionHandler
             _logger.LogError(exception, "Unhandled exception");
         }
 
+        var code = exception switch
+        {
+            InvalidFlightDateException invalidDate => invalidDate.Code,
+            DuplicateFlightException => "duplicate_flight",
+            InvalidVehicleCatalogException => "invalid_vehicle_catalog",
+            _ => null
+        };
+        var hebrewDetail = code switch
+        {
+            "flight_time_zone_required" => "יש לשלוח את מועד הטיסה עם אזור זמן UTC.",
+            "flight_outside_trial" => "מועד הטיסה חייב להיות בתוך תקופת הניסיון, מתאריך ושעת תחילת ההקצאה ועד סיומה.",
+            "flight_in_future" => "לא ניתן לדווח על טיסה שמועדה בעתיד.",
+            "invalid_vehicle_catalog" => "פרטי הרכב אינם תקינים. יש לבדוק את שם הדגם, המהירות, מספר המושבים וקישור התמונה.",
+            "duplicate_flight" => "כבר דווחה טיסה בתאריך ובשעה האלה בחשבון שלך.",
+            _ => detail
+        };
+        var problem = new ProblemDetails { Status = statusCode, Title = title, Detail = detail };
+        if (code is not null)
+        {
+            problem.Extensions["code"] = code;
+            problem.Extensions["messageHe"] = hebrewDetail;
+            problem.Extensions["messageEn"] = detail;
+            if (httpContext.Request.Headers.AcceptLanguage.ToString().StartsWith("he", StringComparison.OrdinalIgnoreCase))
+                problem.Detail = hebrewDetail;
+        }
+
         httpContext.Response.StatusCode = statusCode;
 
         return await _problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = httpContext,
             Exception = exception,
-            ProblemDetails = new ProblemDetails
-            {
-                Status = statusCode,
-                Title = title,
-                Detail = detail
-            }
+            ProblemDetails = problem
         });
     }
 
@@ -72,6 +93,9 @@ public class SkyShiftExceptionHandler : IExceptionHandler
     {
         return exception switch
         {
+            InvalidVehicleCatalogException => (StatusCodes.Status400BadRequest, "Invalid vehicle details", exception.Message),
+            InvalidFlightDateException => (StatusCodes.Status400BadRequest, "Invalid flight date", exception.Message),
+            DuplicateFlightException => (StatusCodes.Status409Conflict, "Duplicate flight", exception.Message),
             KeyNotFoundException => (StatusCodes.Status404NotFound, "Not Found", exception.Message),
             VehicleNotAvailableException => (StatusCodes.Status409Conflict, "Conflict", exception.Message),
             InvalidVehicleStatusTransitionException => (StatusCodes.Status409Conflict, "Conflict", exception.Message),

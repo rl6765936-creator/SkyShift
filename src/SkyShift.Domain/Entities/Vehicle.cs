@@ -17,6 +17,11 @@ namespace SkyShift.Domain.Entities;
 public class Vehicle
 {
     public int Id { get; private set; }
+    public string? ModelName { get; private set; }
+    public int? MaxSpeedKmh { get; private set; }
+    public int? Seats { get; private set; }
+    public string? ImageUrl { get; private set; }
+
     public VehicleStatus Status { get; private set; }
     public bool IsPersonalExperimental { get; private set; }
 
@@ -114,5 +119,34 @@ public class Vehicle
             throw new InvalidVehicleStatusTransitionException(Id, Status, VehicleStatus.Unavailable);
 
         Status = VehicleStatus.Unavailable;
+    }
+    /// <summary>Optional catalog data; legacy vehicles retain unknown (null) values.</summary>
+    public void SetCatalogDetails(string? modelName, int? maxSpeedKmh, int? seats, string? imageUrl)
+    {
+        var name = modelName?.Trim();
+        var image = imageUrl?.Trim();
+        if (name is not null && (name.Length == 0 || name.Length > 200))
+            throw new InvalidVehicleCatalogException("Model name must contain 1 to 200 characters.");
+        if (maxSpeedKmh.HasValue && (maxSpeedKmh < 1 || maxSpeedKmh > 2000))
+            throw new InvalidVehicleCatalogException("Maximum speed must be between 1 and 2000 km/h.");
+        if (seats.HasValue && (seats < 1 || seats > 100))
+            throw new InvalidVehicleCatalogException("Seats must be between 1 and 100.");
+        if (image is not null && (image.Length == 0 || image.Length > 2048 || !IsValidImageUrl(image)))
+            throw new InvalidVehicleCatalogException("Image URL must be an HTTP(S) URL or a root-relative asset path.");
+
+        ModelName = name;
+        MaxSpeedKmh = maxSpeedKmh;
+        Seats = seats;
+        ImageUrl = image;
+    }
+
+    private static bool IsValidImageUrl(string value)
+    {
+        if (value.Any(char.IsWhiteSpace) || value.Contains('\\'))
+            return false;
+        if (value.StartsWith('/') && !value.StartsWith("//"))
+            return true;
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
     }
 }
