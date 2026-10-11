@@ -21,3 +21,9 @@ src/SkyShift.Api/bin/**/internal-nlog*.txt
 ## Rider / VS Code (harmless if unused on this machine)
 .idea/
 .vscode/
+
+## Local operational output: database backups and migration-review / demo-reset logs.
+## Backups and reset logs are written to %USERPROFILE%\SkyShiftBackups, outside the repo; these
+## patterns are a second line of defence. Never commit them.
+*.bak
+_migration-review/*/

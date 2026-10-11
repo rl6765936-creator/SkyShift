@@ -7,21 +7,10 @@ using Microsoft.IdentityModel.Tokens;
 namespace SkyShift.Api.Authentication;
 
 /// <summary>
-/// API-only JWT generation service. Approved decision: JWT ownership belongs
-/// entirely to SkyShift.Api -- there is no ITokenGenerator in Application,
-/// and Application/Domain remain unaware that JWT (or any token concept)
-/// exists. This class contains no business logic and does not access the
-/// database, repositories, or any Application Use Case -- it only turns an
-/// already-authenticated identity (UserId, Email, Name, Role, obtained by
-/// the caller from a successful RegisterUserUseCase/LoginUserUseCase call)
-/// into a signed token string.
-///
-/// Manager MVP change: this is the one, explicitly approved amendment to
-/// the prior "exactly 3 claims, no Roles" decision. A 4th claim,
-/// ClaimTypes.Role, is added below so that [Authorize(Roles = "Manager")]
-/// works using ASP.NET Core's default RoleClaimType. Every other setting
-/// (signing algorithm, Issuer/Audience, ClockSkew, JWT ownership by Api)
-/// is unchanged.
+/// Issues signed JWTs for an already authenticated user; JWT handling belongs to the Api, so
+/// Application and Domain have no token concept. It holds no business logic and does not access the
+/// database or any use case. The token carries the user id, email, name and role claims, and the
+/// role claim is what [Authorize(Roles = "Manager")] checks.
 /// </summary>
 public class JwtTokenService
 {

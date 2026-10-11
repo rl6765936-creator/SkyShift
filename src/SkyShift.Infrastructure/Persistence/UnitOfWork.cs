@@ -8,26 +8,11 @@ using SkyShift.Domain.Exceptions;
 namespace SkyShift.Infrastructure.Persistence;
 
 /// <summary>
-/// Implements the Application-facing IUnitOfWork with exactly the one
-/// approved member. Also the single place that commits or rolls back the
-/// ambient Serializable transaction SkyShiftDbContext opened on first use in
-/// this scope (see SkyShiftDbContext.EnsureTransactionAsync) -- Application
-/// only ever sees SaveChangesAsync(); transaction demarcation is entirely
-/// internal to Infrastructure.
-///
-/// Two concurrency failure modes are translated here, both to the existing
-/// Domain VehicleNotAvailableException, so Application never needs to know
-/// EF Core's or SQL Server's exception types:
-///   - Problem 1 (two users selecting the same Vehicle at once): surfaces as
-///     DbUpdateConcurrencyException from the Vehicle RowVersion token.
-///   - Problem 2 (the same user's two concurrent SelectVehicle requests):
-///     surfaces as a DbUpdateException wrapping a SQL Server serialization
-///     conflict (deadlock/lock-timeout) on the VehicleAssignment insert --
-///     the concrete failure mode of two Serializable transactions racing on
-///     the same key range (see VehicleAssignmentRepository.GetActiveForUserAsync).
-/// Only these specific, identified failures are translated; every other
-/// exception -- including a DbUpdateException/DbUpdateConcurrencyException
-/// that does not involve Vehicle/VehicleAssignment -- is rethrown unchanged.
+/// Implements IUnitOfWork: saves changes and commits or rolls back the ambient transaction opened
+/// by SkyShiftDbContext. It translates specific database failures into domain exceptions: duplicate
+/// flight, catalog model or email (unique indexes), a referenced vehicle delete (FK 547), and
+/// RowVersion or serialization conflicts (1205/1222, including EF Core's transient-failure wrapper)
+/// on a Vehicle or VehicleAssignment. Every other exception is rethrown unchanged.
 /// </summary>
 public class UnitOfWork : IUnitOfWork
 {
@@ -49,6 +34,25 @@ public class UnitOfWork : IUnitOfWork
         {
             await _context.RollbackTransactionAsync(cancellationToken);
             throw new DuplicateFlightException();
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation<Vehicle>(ex, "IX_Vehicles_CatalogItemId"))
+        {
+            await _context.RollbackTransactionAsync(cancellationToken);
+            throw new CatalogItemInUseException();
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation<User>(ex, "IX_Users_Email"))
+        {
+            await _context.RollbackTransactionAsync(cancellationToken);
+            var user = (User)ex.Entries.First(e => e.Entity is User).Entity;
+            throw new EmailAlreadyRegisteredException(user.Email);
+        }
+        catch (DbUpdateException ex) when (IsDeletedVehicleStillReferenced(ex))
+        {
+            // Defence in depth for vehicle deletion: a VehicleAssignment or Flight
+            // referencing the vehicle (FK, ON DELETE RESTRICT) blocks the DELETE.
+            await _context.RollbackTransactionAsync(cancellationToken);
+            var vehicle = (Vehicle)ex.Entries.First(e => e.Entity is Vehicle).Entity;
+            throw VehicleDeletionNotAllowedException.HasHistory(vehicle.Id);
         }
         catch (DbUpdateConcurrencyException ex)
         {
@@ -87,27 +91,24 @@ public class UnitOfWork : IUnitOfWork
         }
         catch (DbUpdateException ex) when (IsSelectVehicleSerializationConflict(ex))
         {
-            var assignmentEntry = ex.Entries.FirstOrDefault(e => e.Entity is VehicleAssignment);
-            if (assignmentEntry is not null)
-            {
-                var assignment = (VehicleAssignment)assignmentEntry.Entity;
-                await _context.RollbackTransactionAsync(cancellationToken);
-                throw new VehicleNotAvailableException(assignment.VehicleId, VehicleStatus.InUse);
-            }
-
-            var vehicleEntry = ex.Entries.FirstOrDefault(e => e.Entity is Vehicle);
-            if (vehicleEntry is not null)
-            {
-                var vehicle = (Vehicle)vehicleEntry.Entity;
-                await _context.RollbackTransactionAsync(cancellationToken);
-                throw new VehicleNotAvailableException(vehicle.Id, VehicleStatus.InUse);
-            }
-
-            // A serialization conflict that does not involve
-            // VehicleAssignment or Vehicle is not the failure this
-            // translation targets -- surfaced as-is.
             await _context.RollbackTransactionAsync(cancellationToken);
-            throw;
+            var translated = TranslateSerializationConflict(ex);
+            if (translated is null)
+                throw;
+            throw translated;
+        }
+        // EF Core's default SQL Server execution strategy treats deadlock/lock-timeout
+        // as transient and wraps the DbUpdateException in an InvalidOperationException
+        // ("transient failure ... EnableRetryOnFailure"). Only that exact shape is
+        // unwrapped here; any other InvalidOperationException propagates unchanged.
+        // No automatic retry: replaying would require re-running the whole use case.
+        catch (InvalidOperationException ex) when (ex.InnerException is DbUpdateException inner && IsSelectVehicleSerializationConflict(inner))
+        {
+            await _context.RollbackTransactionAsync(cancellationToken);
+            var translated = TranslateSerializationConflict(inner);
+            if (translated is null)
+                throw;
+            throw translated;
         }
         catch
         {
@@ -116,13 +117,38 @@ public class UnitOfWork : IUnitOfWork
         }
     }
 
+    // The losing side of a serialization conflict on a Vehicle or VehicleAssignment
+    // is reported as the vehicle not being available (409). Null when the conflict
+    // involves neither entity -- that is not a failure this translation targets.
+    private static Exception? TranslateSerializationConflict(DbUpdateException ex)
+    {
+        if (ex.Entries.FirstOrDefault(e => e.Entity is VehicleAssignment)?.Entity is VehicleAssignment assignment)
+            return new VehicleNotAvailableException(assignment.VehicleId, VehicleStatus.InUse);
+
+        if (ex.Entries.FirstOrDefault(e => e.Entity is Vehicle)?.Entity is Vehicle vehicle)
+            return new VehicleNotAvailableException(vehicle.Id, VehicleStatus.InUse);
+
+        return null;
+    }
+
+    private static bool IsDeletedVehicleStillReferenced(DbUpdateException ex)
+    {
+        if (!ex.Entries.Any(e => e.Entity is Vehicle && e.State == EntityState.Deleted))
+            return false;
+
+        for (var inner = ex.InnerException; inner is not null; inner = inner.InnerException)
+        {
+            if (inner is SqlException sql && sql.Number == 547)
+                return true;
+        }
+
+        return false;
+    }
+
     /// <summary>
-    /// True when the given DbUpdateException's root cause is a SQL Server
-    /// serialization conflict: 1205 (deadlock victim) or 1222 (lock request
-    /// timed out) -- the two concrete ways two Serializable transactions
-    /// racing on the same key range can fail against each other. Any other
-    /// DbUpdateException (a real constraint violation, a connectivity
-    /// error, etc.) is left untranslated by this filter.
+    /// True when the DbUpdateException's root cause is a SQL Server serialization conflict: 1205
+    /// (deadlock victim) or 1222 (lock request timed out). Any other DbUpdateException is left
+    /// untranslated by this filter.
     /// </summary>
     private static bool IsSelectVehicleSerializationConflict(DbUpdateException ex)
     {
@@ -134,6 +160,26 @@ public class UnitOfWork : IUnitOfWork
 
         return false;
     }
+    /// <summary>
+    /// True only for a SQL Server unique-key violation (2601/2627) on the
+    /// named index, raised while saving an entity of type T. Any other
+    /// failure is left untranslated.
+    /// </summary>
+    private static bool IsUniqueViolation<T>(DbUpdateException exception, string indexName)
+    {
+        if (!exception.Entries.Any(e => e.Entity is T))
+            return false;
+
+        for (var inner = exception.InnerException; inner is not null; inner = inner.InnerException)
+        {
+            if (inner is SqlException sql && (sql.Number == 2601 || sql.Number == 2627)
+                && sql.Message.Contains(indexName, StringComparison.Ordinal))
+                return true;
+        }
+
+        return false;
+    }
+
     private static bool IsDuplicateFlight(DbUpdateException exception)
     {
         if (!exception.Entries.Any(e => e.Entity is Flight))

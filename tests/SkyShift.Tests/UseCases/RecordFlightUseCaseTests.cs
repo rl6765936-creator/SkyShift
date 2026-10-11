@@ -63,7 +63,7 @@ public class RecordFlightUseCaseTests
     public async Task NoAssignment_DoesNotInsertOrSave()
     {
         var (useCase, flights, unit) = Arrange(assigned: false);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => useCase.ExecuteAsync(7, new RecordFlightRequest { Date = Now }));
+        await Assert.ThrowsAsync<NoActiveAssignmentException>(() => useCase.ExecuteAsync(7, new RecordFlightRequest { Date = Now }));
         flights.Verify(r => r.AddAsync(It.IsAny<Flight>(), It.IsAny<CancellationToken>()), Times.Never);
         unit.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -75,5 +75,29 @@ public class RecordFlightUseCaseTests
         var error = await Assert.ThrowsAsync<InvalidFlightDateException>(() => useCase.ExecuteAsync(7, new RecordFlightRequest { Date = DateTime.SpecifyKind(Now, DateTimeKind.Unspecified) }));
         Assert.Equal("flight_time_zone_required", error.Code);
         unit.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    // Boundary policy (UTC, inclusive): trial start and "now" are accepted;
+    // one tick before the start, or one tick after now, is rejected.
+    [Fact]
+    public async Task Boundaries_TrialStartAndNowAccepted_OneTickOutsideRejected()
+    {
+        var trialStart = Now.AddDays(-10);
+
+        var (atStart, _, _) = Arrange();
+        await atStart.ExecuteAsync(7, new RecordFlightRequest { Date = trialStart });
+
+        var (atNow, _, _) = Arrange();
+        await atNow.ExecuteAsync(7, new RecordFlightRequest { Date = Now });
+
+        var (beforeStart, _, unitBefore) = Arrange();
+        Assert.Equal("flight_outside_trial", (await Assert.ThrowsAsync<InvalidFlightDateException>(() =>
+            beforeStart.ExecuteAsync(7, new RecordFlightRequest { Date = trialStart.AddTicks(-1) }))).Code);
+        unitBefore.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+
+        var (afterNow, _, unitAfter) = Arrange();
+        Assert.Equal("flight_in_future", (await Assert.ThrowsAsync<InvalidFlightDateException>(() =>
+            afterNow.ExecuteAsync(7, new RecordFlightRequest { Date = Now.AddTicks(1) }))).Code);
+        unitAfter.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

@@ -2,6 +2,7 @@ using AutoMapper;
 using SkyShift.Application.Abstractions;
 using SkyShift.Application.DTOs;
 using SkyShift.Domain.Entities;
+using SkyShift.Domain.Exceptions;
 
 namespace SkyShift.Application.UseCases.RegisterUser;
 
@@ -30,7 +31,7 @@ public class RegisterUserUseCase
     {
         var existingUser = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
         if (existingUser is not null)
-            throw new InvalidOperationException($"Email '{request.Email}' is already registered.");
+            throw new EmailAlreadyRegisteredException(request.Email);
 
         var passwordHash = _passwordHasher.Hash(request.Password);
         var user = User.Create(request.Name, request.Email, request.AverageDailyTrips, passwordHash, request.Gender);

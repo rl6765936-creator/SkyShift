@@ -6,33 +6,12 @@ using SkyShift.Domain.Entities;
 namespace SkyShift.Infrastructure.Persistence;
 
 /// <summary>
-/// EF Core DbContext for SkyShift. Also owns the small, Infrastructure-only
-/// ambient-transaction mechanism (approved "Option A") that lets a read
-/// (VehicleAssignmentRepository.GetActiveForUserAsync) and a later write in
-/// the same scope (SelectVehicle's Vehicle update + VehicleAssignment
-/// insert) share one Serializable-isolation transaction -- without
-/// Application ever knowing a transaction exists.
-///
-/// How it works:
-///   - EnsureTransactionAsync() is called only by the Repository methods
-///     that actually participate in the SelectVehicle critical path:
-///     VehicleAssignmentRepository.GetActiveForUserAsync/AddAsync and
-///     VehicleRepository.GetByIdAsync/UpdateAsync. It is idempotent: only
-///     the first call in a given DbContext scope actually opens a
-///     transaction. Unrelated Repository methods (UserRepository,
-///     FlightRepository, VehicleRepository.GetAvailableAsync) do not call
-///     it and run as plain, untransacted reads/writes.
-///   - UnitOfWork.SaveChangesAsync() calls CommitTransactionAsync() after a
-///     successful SaveChanges, or RollbackTransactionAsync() on failure.
-///   - Read-only Use Cases that call GetActiveForUserAsync or
-///     Vehicle.GetByIdAsync (GetUserDashboard, GetUserVehicle) still open
-///     this transaction on that call -- unavoidable, since those Use Cases
-///     go through the exact same Repository methods SelectVehicle uses, and
-///     Infrastructure has no way to tell the callers apart without a change
-///     to Application. Nothing ever commits or rolls back that transaction
-///     explicitly in those flows; it is released implicitly when the
-///     DbContext/connection is disposed at the end of its DI scope (closing
-///     a connection with an open transaction rolls it back).
+/// EF Core DbContext that also owns an ambient Serializable transaction, so reads and the following
+/// writes of a critical path (vehicle selection, vehicle deletion) run in one transaction without
+/// Application knowing about it. Only the repository methods on those paths call
+/// EnsureTransactionAsync, which opens the transaction once per scope; UnitOfWork commits or rolls
+/// it back, and display reads never open it. A transaction left open by a use case that throws
+/// before saving is rolled back when the scope's DbContext is disposed.
 /// </summary>
 public class SkyShiftDbContext : DbContext
 {
@@ -40,6 +19,7 @@ public class SkyShiftDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Vehicle> Vehicles => Set<Vehicle>();
+    public DbSet<VehicleCatalogItem> VehicleCatalogItems => Set<VehicleCatalogItem>();
     public DbSet<VehicleAssignment> VehicleAssignments => Set<VehicleAssignment>();
     public DbSet<Flight> Flights => Set<Flight>();
 
@@ -81,7 +61,20 @@ public class SkyShiftDbContext : DbContext
         var transaction = _currentTransaction;
         _currentTransaction = null;
 
-        await transaction.RollbackAsync(cancellationToken);
-        await transaction.DisposeAsync();
+        try
+        {
+            await transaction.RollbackAsync(cancellationToken);
+        }
+        catch (InvalidOperationException) when (transaction.GetDbTransaction().Connection is null)
+        {
+            // SQL Server already rolled the transaction back (e.g. this session was
+            // chosen as a deadlock victim), which leaves the client transaction
+            // "completed" with no connection. Nothing remains to roll back; the
+            // original failure is what the caller reports.
+        }
+        finally
+        {
+            await transaction.DisposeAsync();
+        }
     }
 }

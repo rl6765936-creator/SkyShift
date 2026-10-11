@@ -1,14 +1,14 @@
 using AutoMapper;
 using SkyShift.Application.Abstractions;
 using SkyShift.Application.DTOs;
+using SkyShift.Domain.Exceptions;
 
 namespace SkyShift.Application.UseCases.LoginUser;
 
 /// <summary>
-/// Verifies credentials and returns the authenticated user's identity.
-/// Deliberately stops there: token issuance (JWT or otherwise) is a
-/// separate, not-yet-decided Authentication topic. This Use Case does not
-/// know about, and does not produce, any kind of token.
+/// Verifies credentials and returns the authenticated user's identity, or throws
+/// InvalidCredentialsException. It issues no token; the Api's JwtTokenService creates the JWT from
+/// this result.
 /// </summary>
 public class LoginUserUseCase
 {
@@ -27,7 +27,7 @@ public class LoginUserUseCase
     {
         var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
         if (user is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
-            throw new InvalidOperationException("Invalid email or password.");
+            throw new InvalidCredentialsException();
 
         return _mapper.Map<LoginResponse>(user);
     }

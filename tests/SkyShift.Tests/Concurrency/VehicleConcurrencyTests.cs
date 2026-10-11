@@ -6,27 +6,10 @@ using Xunit;
 namespace SkyShift.Tests.Concurrency;
 
 /// <summary>
-/// The specific, separately-required proof from the course spec: two
-/// independent DbContext instances read the same entity, both modify it,
-/// the first SaveChangesAsync succeeds, and the second throws
-/// DbUpdateConcurrencyException. This exercises the real, already-approved
-/// optimistic-concurrency token on Vehicle (the shadow "RowVersion"
-/// property, configured via .IsRowVersion() in VehicleConfiguration) --
-/// nothing about that configuration, or about UnitOfWork's translation of
-/// this exception into VehicleNotAvailableException/409, is touched here.
-///
-/// Uses EF Core's InMemory provider rather than the production SqlServer
-/// provider, purely so this test needs no real database connection.
-/// InMemory has no equivalent of SQL Server's native "rowversion" column,
-/// which the database engine itself regenerates on every UPDATE -- so,
-/// unlike against the real SqlServer provider, the RowVersion value would
-/// never actually change between the two saves below, and no conflict
-/// would ever be detected. The single explicit RowVersion write before
-/// context1's save (see below) stands in for that server-side behavior;
-/// everything this test is actually meant to prove -- two contexts reading
-/// the same row, the first save succeeding, the second save's now-stale
-/// original value being rejected -- is exercised exactly as it would be
-/// against SQL Server.
+/// Proves the Vehicle RowVersion concurrency token: two DbContexts read the same vehicle, both
+/// modify it, the first save succeeds and the second throws DbUpdateConcurrencyException. It uses
+/// the InMemory provider so no database is needed. Because InMemory does not regenerate rowversion
+/// values, the test sets the new RowVersion explicitly before the first save, as SQL Server would.
 /// </summary>
 public class VehicleConcurrencyTests
 {

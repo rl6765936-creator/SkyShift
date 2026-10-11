@@ -10,17 +10,9 @@ using Xunit;
 namespace SkyShift.Tests.UseCases;
 
 /// <summary>
-/// Service-layer (Use Case) tests for the limited-resource logic, with
-/// repositories mocked via Moq -- the specific, mandatory coverage the
-/// course spec calls out: at least one test on the valid case and one on
-/// the rejected case for the resource competed over (Vehicle).
-///
-/// These tests exercise SelectVehicleUseCase's orchestration and the real
-/// Domain rule in Vehicle.Assign() (never mocked/reimplemented here) — only
-/// the repositories and IUnitOfWork are mocked. They do not, and are not
-/// meant to, prove the concurrency-race behavior itself: that needs a real
-/// EF Core provider, not a Moq mock of an interface -- see
-/// VehicleConcurrencyTests for that separately-required proof.
+/// Use-case tests for the limited resource with repositories and IUnitOfWork mocked by Moq: a valid
+/// selection and a rejected one. They run the real Vehicle.Assign() rule but do not test
+/// concurrency, which VehicleConcurrencyTests and the SQL Server tests cover.
 /// </summary>
 public class SelectVehicleUseCaseTests
 {

@@ -1,10 +1,8 @@
 namespace SkyShift.Application.Abstractions;
 
 /// <summary>
-/// Persists all changes made during the current Use Case as a single unit.
-/// Deliberately minimal: Application only needs "commit what I did," never
-/// transaction mechanics (isolation level, explicit Begin/Commit, DbContext,
-/// EF Core) -- those stay entirely inside Infrastructure's implementation.
+/// Persists all changes made during the current use case as a single unit. Transaction mechanics
+/// (isolation level, begin/commit, EF Core) stay inside the Infrastructure implementation.
 /// </summary>
 public interface IUnitOfWork
 {

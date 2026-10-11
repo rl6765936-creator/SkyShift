@@ -4,23 +4,10 @@ using Microsoft.Extensions.Logging;
 namespace SkyShift.Api.Middleware;
 
 /// <summary>
-/// Assigns a CorrelationId to every incoming request -- reusing the inbound
-/// "X-Correlation-Id" request header when the caller supplies one, or
-/// generating a new one otherwise -- echoes it back on the response header,
-/// and pushes it into the logging scope so every NLog line written while
-/// handling this request (including a caught exception logged by
-/// SkyShiftExceptionHandler) can be tied back to a single request.
-///
-/// Registered first in the pipeline, in Program.cs, ahead of
-/// app.UseExceptionHandler(): the logging scope this middleware opens wraps
-/// the entire downstream call chain, so it is still active if an exception
-/// later propagates back up into the global exception handler.
-///
-/// The scope alone does not write anything -- it only enriches log lines
-/// that other code chooses to emit. On a normal (non-exception) request
-/// nothing else in the pipeline logs at all, so this middleware also emits
-/// the one Information line per request itself, after the response status
-/// code is known, satisfying "log each incoming request with CorrelationId".
+/// Gives every request a CorrelationId, reusing the inbound X-Correlation-Id header when present,
+/// and returns it in the response header. It runs first in the pipeline and opens a logging scope,
+/// so every log line for the request, including errors logged by SkyShiftExceptionHandler, carries
+/// the id. It also writes one Information line per request once the response status is known.
 /// </summary>
 public class CorrelationIdMiddleware
 {

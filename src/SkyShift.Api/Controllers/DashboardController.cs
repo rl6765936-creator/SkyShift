@@ -7,13 +7,9 @@ using SkyShift.Application.UseCases.GetUserDashboard;
 namespace SkyShift.Api.Controllers;
 
 /// <summary>
-/// MVP dashboard endpoint. Thin presentation code only -- it extracts the
-/// authenticated UserId from the JWT claim and calls
-/// GetUserDashboardUseCase, which alone computes ExpectedMonthlyTrips,
-/// CompletedFlights, Percentage, IsLotteryEligible, and CurrentVehicle. No
-/// business logic, no repository/DbContext access, and no exception
-/// handling of its own: KeyNotFoundException is left to propagate to the
-/// existing global SkyShiftExceptionHandler.
+/// Returns the authenticated user's dashboard. Thin presentation code: it reads the user id from
+/// the JWT and calls GetUserDashboardUseCase, which computes every value. Exceptions propagate to
+/// SkyShiftExceptionHandler.
 /// </summary>
 [ApiController]
 [Route("api/dashboard")]

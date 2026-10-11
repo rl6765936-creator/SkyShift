@@ -1,14 +1,12 @@
+using System.Linq.Expressions;
+
 namespace SkyShift.Domain.Entities;
 
 /// <summary>
-/// Represents the one-month trial relationship between a User and a Vehicle.
-/// Kept as its own Aggregate Root (rather than fields on User/Vehicle) so the
-/// system retains a history of assignments, not just the currently active one.
-/// This Aggregate is intentionally not merged with Vehicle: keeping an active
-/// VehicleAssignment consistent with its Vehicle's Status (InUse while active,
-/// Available again once released) is a cross-aggregate invariant, so it must
-/// be coordinated by an Application-layer Use Case that calls both
-/// Vehicle.Assign()/Release() and VehicleAssignment.Create() together.
+/// The one-month trial relationship between a User and a Vehicle, kept as its own aggregate so
+/// assignment history is preserved. Keeping it consistent with the vehicle's status is a
+/// cross-aggregate rule coordinated by SelectVehicleUseCase, which calls Vehicle.Assign() and
+/// VehicleAssignment.Create() together.
 /// </summary>
 public class VehicleAssignment
 {
@@ -21,15 +19,9 @@ public class VehicleAssignment
     public DateTime EndDate { get; private set; }
 
     /// <summary>
-    /// EF Core reference-navigation side of the many-to-many relationship
-    /// this entity realizes between User and Vehicle -- see
-    /// User.VehicleAssignments/Vehicle.VehicleAssignments and
-    /// VehicleAssignmentConfiguration. Populated by EF Core only when a
-    /// query explicitly Include()s it; null! is the standard EF Core
-    /// pattern for a required navigation that is always set by the ORM,
-    /// never by application code (assignments are still created exclusively
-    /// through User.Create/Vehicle.Create + VehicleAssignment.Create in
-    /// SelectVehicleUseCase, which never touches these).
+    /// EF Core reference navigation for the User-Vehicle relationship that this entity realizes. It
+    /// is populated only when a query includes it; null! is the usual pattern for a required
+    /// navigation set by the ORM.
     /// </summary>
     public User User { get; private set; } = null!;
     public Vehicle Vehicle { get; private set; } = null!;
@@ -51,10 +43,20 @@ public class VehicleAssignment
         return new VehicleAssignment(userId, vehicleId, startDate);
     }
 
+    // The trial-window rule: active from StartDate to EndDate, both inclusive.
     public bool IsActive(DateTime asOf)
     {
         return asOf >= StartDate && asOf <= EndDate;
     }
+
+    // Query forms of the same rule (plain expression trees, no ORM dependency), so
+    // repositories filter with the Domain's definition instead of restating it.
+    // Kept next to IsActive; a unit test asserts they agree on every boundary.
+    public static Expression<Func<VehicleAssignment, bool>> ActiveAt(DateTime asOf) =>
+        a => asOf >= a.StartDate && asOf <= a.EndDate;
+
+    public static Expression<Func<VehicleAssignment, bool>> EndedBefore(DateTime asOf) =>
+        a => a.EndDate < asOf;
     /// <summary>Uses the same inclusive trial boundaries as IsActive.</summary>
     public void ValidateFlightDate(DateTime flightDate, DateTime nowUtc)
     {

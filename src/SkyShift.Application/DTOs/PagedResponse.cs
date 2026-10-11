@@ -1,12 +1,8 @@
 namespace SkyShift.Application.DTOs;
 
 /// <summary>
-/// Generic server-side pagination envelope for list endpoints. Items is
-/// already the current page's slice -- Skip/Take applied in the database
-/// by the repository, not after loading every matching row -- and
-/// TotalCount is the count of ALL rows matching the query's filters
-/// (pre-paging), so the client can tell how many pages exist and whether
-/// it is looking at the last one, without fetching every page first.
+/// Pagination envelope for list endpoints. Items is the current page, already paged in the
+/// database, and TotalCount is the number of rows matching the filters before paging.
 /// </summary>
 public class PagedResponse<T>
 {

@@ -7,16 +7,10 @@ using SkyShift.Domain.Exceptions;
 namespace SkyShift.Application.UseCases.ChangeVehicleStatus;
 
 /// <summary>
-/// Manager-driven Vehicle status change, including Retire. Every business
-/// decision about which transitions are legal is delegated to Domain (the
-/// Vehicle.Retire()/MarkAvailable()/SendToMaintenance()/MarkUnavailable()
-/// methods) -- this Use Case never inspects vehicle.Status itself, and does
-/// not catch InvalidVehicleStatusTransitionException; it propagates to the
-/// caller as-is, to be mapped by the global exception handler.
-///
-/// InUse is not a Manager-settable target status: it is only ever reached
-/// through Vehicle.Assign(), as part of the existing SelectVehicle flow.
-/// Requesting InUse here is rejected the same way an illegal transition is.
+/// Manager-driven vehicle status change, including Retire; the Domain's Vehicle methods decide
+/// which transitions are legal. InUse cannot be requested here because it is only reached through
+/// Vehicle.Assign() during vehicle selection. Illegal transitions throw
+/// InvalidVehicleStatusTransitionException, which propagates to the global exception handler.
 /// </summary>
 public class ChangeVehicleStatusUseCase
 {
@@ -35,7 +29,7 @@ public class ChangeVehicleStatusUseCase
     {
         var vehicle = await _vehicleRepository.GetByIdForManagementAsync(vehicleId, cancellationToken);
         if (vehicle is null)
-            throw new KeyNotFoundException($"Vehicle {vehicleId} was not found.");
+            throw new VehicleNotFoundException(vehicleId);
 
         switch (request.TargetStatus)
         {

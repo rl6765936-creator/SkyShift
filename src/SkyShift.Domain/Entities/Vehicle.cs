@@ -4,20 +4,40 @@ using SkyShift.Domain.Exceptions;
 namespace SkyShift.Domain.Entities;
 
 /// <summary>
-/// An air-transportation vehicle available for the trial program.
-/// Assign() enforces the single-assignment rule at the object level: it only
-/// succeeds when Status is Available, so a Vehicle that is already InUse (or
-/// otherwise unavailable) cannot be assigned again through this method.
-/// This guarantees the rule for a sequential call against one loaded instance.
-/// It does NOT by itself guarantee the rule under concurrent access (two
-/// requests racing to assign the same Vehicle at the same time) — that is a
-/// Persistence/Application concern (e.g. optimistic concurrency, a DB
-/// constraint, or a transaction) to be addressed when Infrastructure is designed.
+/// A fleet vehicle that users can be assigned for a trial period. Assign() enforces the
+/// single-assignment rule on a loaded instance: it succeeds only while the status is Available.
+/// Concurrent assignment is handled in Infrastructure (update lock in a Serializable transaction
+/// plus the RowVersion token).
 /// </summary>
 public class Vehicle
 {
     public int Id { get; private set; }
+
+    /// <summary>
+    /// The catalog model this vehicle was created from. Null for legacy
+    /// vehicles created before the catalog existed; they stay unlinked
+    /// until an explicit, reviewed mapping is applied.
+    /// </summary>
+    public int? CatalogItemId { get; private set; }
+    public string? Manufacturer { get; private set; }
+    public string? Description { get; private set; }
+    public string? DescriptionHe { get; private set; }
+    public CatalogIdentification? CatalogIdentification { get; private set; }
+
+    /// <summary>
+    /// Accuracy of Seats / MaxSpeedKmh copied from the catalog. Null for
+    /// legacy vehicles and for vehicles created before accuracy was tracked.
+    /// </summary>
+    public SpecificationAccuracy? SeatsAccuracy { get; private set; }
+    public SpecificationAccuracy? MaxRoadSpeedAccuracy { get; private set; }
+
     public string? ModelName { get; private set; }
+
+    /// <summary>
+    /// For catalog-linked vehicles this is the catalog's maximum ROAD speed
+    /// (see MaxRoadSpeedAccuracy for verified vs illustrative). Legacy
+    /// vehicles keep whatever value was entered before the catalog existed.
+    /// </summary>
     public int? MaxSpeedKmh { get; private set; }
     public int? Seats { get; private set; }
     public string? ImageUrl { get; private set; }
@@ -81,13 +101,9 @@ public class Vehicle
     }
 
     /// <summary>
-    /// Manager-driven status transitions. Each method enforces its own
-    /// legal preconditions -- there is no generic "set status" setter.
-    /// None of these can be reached from InUse: a vehicle that is currently
-    /// assigned to a user must not have its status forced by a Manager
-    /// while that assignment is active (the assignment itself is
-    /// unaffected by any of these calls). None of these can be reached
-    /// from Retired: Retired is a terminal state in this MVP.
+    /// Manager-driven status transitions; each method enforces its own preconditions, and there is
+    /// no generic status setter. None of them can start from InUse, because an assigned vehicle's
+    /// status must not be forced while its assignment is active. Retired is terminal.
     /// </summary>
     public void Retire()
     {
@@ -123,6 +139,9 @@ public class Vehicle
     /// <summary>Optional catalog data; legacy vehicles retain unknown (null) values.</summary>
     public void SetCatalogDetails(string? modelName, int? maxSpeedKmh, int? seats, string? imageUrl)
     {
+        if (CatalogItemId.HasValue)
+            throw new InvalidVehicleCatalogException("Catalog-linked vehicle details come from the catalog and cannot be edited.");
+
         var name = modelName?.Trim();
         var image = imageUrl?.Trim();
         if (name is not null && (name.Length == 0 || name.Length > 200))
@@ -138,6 +157,32 @@ public class Vehicle
         MaxSpeedKmh = maxSpeedKmh;
         Seats = seats;
         ImageUrl = image;
+    }
+
+    /// <summary>
+    /// Links this vehicle to a catalog model and copies the catalog's
+    /// authoritative metadata. Allowed once, and only for a vehicle that has
+    /// no metadata yet, so existing data is never silently replaced.
+    /// </summary>
+    public void ApplyCatalogItem(VehicleCatalogItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        if (CatalogItemId.HasValue)
+            throw new InvalidVehicleCatalogException("A vehicle's catalog model cannot be replaced.");
+        if (ModelName is not null || MaxSpeedKmh.HasValue || Seats.HasValue || ImageUrl is not null)
+            throw new InvalidVehicleCatalogException("This vehicle already has its own details and cannot be linked automatically.");
+
+        CatalogItemId = item.Id;
+        Manufacturer = item.Manufacturer;
+        ModelName = item.ModelName;
+        MaxSpeedKmh = item.MaxRoadSpeedKmh;
+        Seats = item.Seats;
+        SeatsAccuracy = item.SeatsAccuracy;
+        MaxRoadSpeedAccuracy = item.MaxRoadSpeedAccuracy;
+        ImageUrl = item.ImageUrl;
+        Description = item.Description;
+        DescriptionHe = item.DescriptionHe;
+        CatalogIdentification = item.Identification;
     }
 
     private static bool IsValidImageUrl(string value)

@@ -5,30 +5,26 @@ using SkyShift.Domain.Entities;
 namespace SkyShift.Application.Mapping;
 
 /// <summary>
-/// The single AutoMapper profile for this project. Registers only the
-/// mappings that replace what were previously plain, manual, field-by-field
-/// "new XResponse { ... }" object-initializer copies in the Use Cases --
-/// every property on every source/destination pair here already matched by
-/// name (Domain entity getters are public even though their setters are
-/// private, so AutoMapper's default convention resolves them exactly as
-/// the manual copies did), so no custom conversion logic was ever involved,
-/// and none is introduced here.
-///
-/// Deliberately NOT used for GetFlightStatsUseCase,
-/// GetManagerDashboardUseCase, GetAllUsersActivityUseCase, or the
-/// DashboardResponse/ManagerDashboardResponse construction in
-/// GetUserDashboardUseCase/GetManagerDashboardUseCase -- those all build
-/// their response from grouped/aggregated/multi-source data (counts,
-/// percentages, values combined from more than one repository call or
-/// Domain service), not from a single entity's own properties, so there is
-/// no manual Entity <-> DTO mapping there for AutoMapper to replace.
+/// The project's single AutoMapper profile for entity-to-response mappings. Most members map by
+/// name; road speed is mapped explicitly from catalog data, and AssignmentResponse.IsActive is set
+/// by the use cases. Aggregated responses (dashboards, flight statistics, user activity) are built
+/// directly in their use cases instead.
 /// </summary>
 public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        CreateMap<Vehicle, VehicleResponse>();
-        CreateMap<Vehicle, ManagerVehicleResponse>();
+        // MaxRoadSpeedKmh is exposed only when the value came from the
+        // catalog (verified road speed). Legacy free-form MaxSpeedKmh values
+        // keep flowing through MaxSpeedKmh unchanged.
+        CreateMap<Vehicle, VehicleResponse>()
+            .ForMember(dest => dest.MaxRoadSpeedKmh, opt => opt.MapFrom(src => src.CatalogItemId.HasValue ? src.MaxSpeedKmh : null));
+        CreateMap<Vehicle, ManagerVehicleResponse>()
+            .ForMember(dest => dest.MaxRoadSpeedKmh, opt => opt.MapFrom(src => src.CatalogItemId.HasValue ? src.MaxSpeedKmh : null));
+
+        CreateMap<VehicleCatalogItem, VehicleCatalogResponse>()
+            .ForMember(dest => dest.MaxSpeedKmh, opt => opt.MapFrom(src => src.MaxRoadSpeedKmh));
+
         CreateMap<Flight, FlightResponse>();
         CreateMap<User, LoginResponse>();
         CreateMap<User, RegisterUserResponse>();

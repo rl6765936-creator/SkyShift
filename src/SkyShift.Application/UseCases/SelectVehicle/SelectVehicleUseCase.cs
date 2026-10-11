@@ -1,3 +1,4 @@
+using SkyShift.Domain.Exceptions;
 using SkyShift.Application.Abstractions;
 using SkyShift.Application.DTOs;
 using SkyShift.Domain.Entities;
@@ -5,12 +6,10 @@ using SkyShift.Domain.Entities;
 namespace SkyShift.Application.UseCases.SelectVehicle;
 
 /// <summary>
-/// Orchestrates vehicle selection. Every business decision is delegated to
-/// Domain: whether the vehicle can be assigned is decided exclusively by
-/// Vehicle.Assign() (this class never inspects vehicle.Status itself), and
-/// the trial period's length is decided exclusively by VehicleAssignment.Create().
-/// Transaction/concurrency handling for the two writes below is explicitly
-/// out of scope here — an Infrastructure/Persistence concern.
+/// Orchestrates vehicle selection; Vehicle.Assign() decides whether the vehicle can be assigned,
+/// and VehicleAssignment.Create() sets the trial period. One active assignment per user is enforced
+/// here with ActiveAssignmentExistsException. Transactions and concurrency handling are
+/// Infrastructure concerns behind the repositories and IUnitOfWork.
 /// </summary>
 public class SelectVehicleUseCase
 {
@@ -32,11 +31,11 @@ public class SelectVehicleUseCase
     {
         var activeAssignment = await _vehicleAssignmentRepository.GetActiveForUserAsync(userId, cancellationToken);
         if (activeAssignment is not null)
-            throw new InvalidOperationException("User already has an active vehicle assignment.");
+            throw new ActiveAssignmentExistsException();
 
         var vehicle = await _vehicleRepository.GetByIdAsync(request.VehicleId, cancellationToken);
         if (vehicle is null)
-            throw new KeyNotFoundException($"Vehicle {request.VehicleId} was not found.");
+            throw new VehicleNotFoundException(request.VehicleId);
 
         // May throw VehicleNotAvailableException (Domain) — not caught or
         // duplicated here; it propagates to the caller as-is. SaveChangesAsync

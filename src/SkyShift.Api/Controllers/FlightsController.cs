@@ -7,12 +7,9 @@ using SkyShift.Application.UseCases.RecordFlight;
 namespace SkyShift.Api.Controllers;
 
 /// <summary>
-/// MVP flight-recording endpoint. Thin presentation code only -- it
-/// extracts the authenticated UserId from the JWT claim and calls
-/// RecordFlightUseCase, which alone derives the VehicleId from the user's
-/// active assignment. No business logic, no repository/DbContext access,
-/// and no exception handling of its own: InvalidOperationException (no
-/// active assignment) is left to propagate to the existing global
+/// Records a flight for the authenticated user. Thin presentation code: it reads the user id from
+/// the JWT and calls RecordFlightUseCase, which derives the vehicle from the user's active
+/// assignment. Exceptions such as NoActiveAssignmentException propagate to
 /// SkyShiftExceptionHandler.
 /// </summary>
 [ApiController]

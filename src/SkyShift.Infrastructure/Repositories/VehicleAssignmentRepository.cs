@@ -28,7 +28,19 @@ public class VehicleAssignmentRepository : IVehicleAssignmentRepository
         // boundaries on both ends).
         return await _context.VehicleAssignments
             .AsNoTracking()
-            .FirstOrDefaultAsync(a => a.UserId == userId && now >= a.StartDate && now <= a.EndDate, cancellationToken);
+            .Where(VehicleAssignment.ActiveAt(now))
+            .FirstOrDefaultAsync(a => a.UserId == userId, cancellationToken);
+    }
+
+    // Same query as GetActiveForUserAsync without joining the ambient transaction:
+    // for dashboard/"my vehicle" display reads that never write.
+    public async Task<VehicleAssignment?> GetActiveForUserForReadAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        return await _context.VehicleAssignments
+            .AsNoTracking()
+            .Where(VehicleAssignment.ActiveAt(now))
+            .FirstOrDefaultAsync(a => a.UserId == userId, cancellationToken);
     }
 
     public async Task AddAsync(VehicleAssignment assignment, CancellationToken cancellationToken = default)
@@ -56,7 +68,7 @@ public class VehicleAssignmentRepository : IVehicleAssignmentRepository
             .AsNoTracking()
             .Include(a => a.User)
             .Include(a => a.Vehicle)
-            .Where(a => now >= a.StartDate && now <= a.EndDate)
+            .Where(VehicleAssignment.ActiveAt(now))
             .ToListAsync(cancellationToken);
     }
 
@@ -70,7 +82,7 @@ public class VehicleAssignmentRepository : IVehicleAssignmentRepository
             .AsNoTracking()
             .Include(a => a.User)
             .Include(a => a.Vehicle)
-            .Where(a => a.EndDate < now);
+            .Where(VehicleAssignment.EndedBefore(now));
 
         if (userId.HasValue)
             query = query.Where(a => a.UserId == userId.Value);

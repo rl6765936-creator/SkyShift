@@ -34,6 +34,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\SkyShift.Application\SkyShift.Application.csproj" />
     <ProjectReference Include="..\..\src\SkyShift.Infrastructure\SkyShift.Infrastructure.csproj" />
+    <!-- Lets tests exercise the central exception handler (error codes)
+         and the Manager [Authorize] attributes directly. No new packages. -->
+    <ProjectReference Include="..\..\src\SkyShift.Api\SkyShift.Api.csproj" />
   </ItemGroup>
 
 </Project>

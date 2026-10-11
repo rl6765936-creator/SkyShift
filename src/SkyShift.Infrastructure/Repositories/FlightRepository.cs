@@ -34,6 +34,30 @@ public class FlightRepository : IFlightRepository
             .CountAsync(f => f.UserId == userId && f.Date >= startDate && f.Date <= endDate, cancellationToken);
     }
 
+    // Same date rule as GetCompletedCountAsync (UserId match, Date within the
+    // assignment's StartDate..EndDate inclusive), evaluated per assignment by the
+    // database in a single query: a correlated COUNT subquery per assignment row.
+    public async Task<IReadOnlyDictionary<int, int>> GetCompletedCountsForAssignmentsAsync(IReadOnlyCollection<int> assignmentIds, CancellationToken cancellationToken = default)
+    {
+        if (assignmentIds.Count == 0)
+            return new Dictionary<int, int>();
+
+        return await _context.VehicleAssignments
+            .AsNoTracking()
+            .Where(a => assignmentIds.Contains(a.Id))
+            .Select(a => new
+            {
+                a.Id,
+                Completed = _context.Flights.Count(f => f.UserId == a.UserId && f.Date >= a.StartDate && f.Date <= a.EndDate)
+            })
+            .ToDictionaryAsync(x => x.Id, x => x.Completed, cancellationToken);
+    }
+
+    public async Task<int> CountAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Flights.CountAsync(cancellationToken);
+    }
+
     // Manager MVP addition. Filters by the business Date field (inclusive),
     // consistent with GetCompletedCountAsync above -- NOT by CreatedAt.
     public async Task<IReadOnlyList<Flight>> GetAllAsync(int? userId, int? vehicleId, DateTime? from, DateTime? to, CancellationToken cancellationToken = default)

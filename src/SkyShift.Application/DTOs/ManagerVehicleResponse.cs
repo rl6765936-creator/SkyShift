@@ -8,8 +8,29 @@ namespace SkyShift.Application.DTOs;
 // User-facing contract.
 public class ManagerVehicleResponse
 {
+    // Catalog metadata (null for legacy, unlinked vehicles).
+    public int? CatalogItemId { get; set; }
+    public string? Manufacturer { get; set; }
+    public string? Description { get; set; }
+    public string? DescriptionHe { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public CatalogIdentification? CatalogIdentification { get; set; }
+
     public string? ModelName { get; set; }
+
+    // See VehicleResponse.MaxSpeedKmh / MaxRoadSpeedKmh.
     public int? MaxSpeedKmh { get; set; }
+    public int? MaxRoadSpeedKmh { get; set; }
+
+    // Verified / Illustrative for the catalog-copied Seats and MaxRoadSpeedKmh.
+    // Null for legacy vehicles (their values are free-form and unclassified).
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public SpecificationAccuracy? SeatsAccuracy { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public SpecificationAccuracy? MaxRoadSpeedAccuracy { get; set; }
+
     public int? Seats { get; set; }
     public string? ImageUrl { get; set; }
 

@@ -5,16 +5,10 @@ using SkyShift.Application.DTOs;
 namespace SkyShift.Application.UseCases.GetAllFlights;
 
 /// <summary>
-/// Manager flight monitoring, with optional filters, server-side paginated.
-/// from/to filter by the business Date field (see
-/// IFlightRepository.GetPagedAsync), matching how a Manager browsing
-/// "flights in date range X" would expect it -- not by CreatedAt, which is
-/// reserved for trend/audit statistics (GetFlightStatsUseCase).
-///
-/// page/pageSize are optional and validated/defaulted here rather than at
-/// the API layer, consistent with how other request defaulting in this
-/// codebase lives in Application: an omitted or out-of-range value falls
-/// back to a sensible default instead of failing the request.
+/// Manager flight list with optional filters, paginated in the database through
+/// IFlightRepository.GetPagedAsync. from/to filter by the business Date field, not CreatedAt.
+/// Omitted or out-of-range page/pageSize values fall back to defaults instead of failing the
+/// request.
 /// </summary>
 public class GetAllFlightsUseCase
 {

@@ -15,27 +15,27 @@ public interface IFlightRepository
     /// </summary>
     Task<int> GetCompletedCountAsync(int userId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default);
 
+    // Batched form of GetCompletedCountAsync for many assignments at once: for each
+    // assignment id, the number of that assignment's user's flights whose Date is
+    // within the assignment's own StartDate..EndDate (inclusive). One database query,
+    // so callers never loop over assignments issuing a count per row (N+1).
+    Task<IReadOnlyDictionary<int, int>> GetCompletedCountsForAssignmentsAsync(IReadOnlyCollection<int> assignmentIds, CancellationToken cancellationToken = default);
+
+    // Total number of flights, counted by the database rather than by loading rows.
+    Task<int> CountAsync(CancellationToken cancellationToken = default);
+
     /// <summary>
-    /// Manager MVP addition. Returns all Flights matching the given
-    /// optional filters. userId/vehicleId filter by exact match; from/to
-    /// filter by the business Date field (inclusive), consistent with
-    /// GetCompletedCountAsync above -- NOT by CreatedAt. Used both for the
-    /// raw Manager flight list and, in Application, as the source data for
-    /// Manager flight statistics (grouping/aggregation happens in the Use
-    /// Case, not here).
+    /// Returns all flights matching the optional filters: userId/vehicleId by exact match, and
+    /// from/to by the business Date field (inclusive), not CreatedAt. It is used where the full
+    /// filtered set is aggregated (flight statistics and user activity); the paginated list uses
+    /// GetPagedAsync.
     /// </summary>
     Task<IReadOnlyList<Flight>> GetAllAsync(int? userId, int? vehicleId, DateTime? from, DateTime? to, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Manager MVP pagination addition. Same optional filters as
-    /// GetAllAsync above, but applies Skip/Take in the database and also
-    /// returns the total matching row count (pre-paging), so the caller
-    /// can report how many pages exist without loading them. page is
-    /// 1-based; both page and pageSize are assumed already validated by
-    /// the caller (GetAllFlightsUseCase). Used only for the paginated
-    /// Manager flight list -- GetAllAsync above is untouched and is still
-    /// used, unpaginated, by the aggregate/statistics/dashboard Use Cases
-    /// that need the full filtered set.
+    /// Same filters as GetAllAsync, but applies Skip/Take in the database and also returns the
+    /// total matching count before paging. page is 1-based, and page and pageSize are validated by
+    /// the caller (GetAllFlightsUseCase).
     /// </summary>
     Task<(IReadOnlyList<Flight> Items, int TotalCount)> GetPagedAsync(int? userId, int? vehicleId, DateTime? from, DateTime? to, int page, int pageSize, CancellationToken cancellationToken = default);
 }

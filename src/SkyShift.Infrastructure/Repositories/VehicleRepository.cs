@@ -18,10 +18,23 @@ public class VehicleRepository : IVehicleRepository
     // Part of the SelectVehicle critical path (loads the vehicle being
     // assigned) -- keeps the ambient Serializable transaction opened by
     // VehicleAssignmentRepository.GetActiveForUserAsync.
+    //
+    // Lock ordering: on SQL Server the row is read WITH (UPDLOCK, HOLDLOCK). Every
+    // write path that goes through here (SelectVehicle, DeleteVehicle) therefore
+    // takes the vehicle's update lock first and holds it to commit, so a second
+    // writer for the same vehicle waits here and then reads the committed state.
+    // Without it both transactions hold shared locks on the row and deadlock when
+    // each converts to an exclusive lock for its UPDATE/DELETE (error 1205).
     public async Task<Vehicle?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         await _context.EnsureTransactionAsync(cancellationToken);
-        return await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
+
+        if (!_context.Database.IsSqlServer())
+            return await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
+
+        return await _context.Vehicles
+            .FromSqlInterpolated($"SELECT * FROM [Vehicles] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {id}")
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     // Not part of the SelectVehicle critical path -- a plain listing query,
@@ -44,6 +57,30 @@ public class VehicleRepository : IVehicleRepository
     // Manager MVP addition. Not part of the SelectVehicle critical path --
     // Manager fleet management has no relation to the VehicleAssignment
     // concurrency race, so no ambient transaction is opened here.
+    // Display reads: untracked, no ambient transaction (see IVehicleRepository).
+    public async Task<Vehicle?> GetByIdForReadAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Vehicles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
+    }
+
+    // Part of the delete critical path: joins the Serializable transaction opened by
+    // GetByIdAsync, so a concurrent assignment or flight for this vehicle cannot be
+    // inserted between this check and the DELETE.
+    public async Task<bool> HasHistoryAsync(int id, CancellationToken cancellationToken = default)
+    {
+        await _context.EnsureTransactionAsync(cancellationToken);
+        return await _context.VehicleAssignments.AnyAsync(a => a.VehicleId == id, cancellationToken)
+            || await _context.Flights.AnyAsync(f => f.VehicleId == id, cancellationToken);
+    }
+
+    public async Task DeleteAsync(Vehicle vehicle, CancellationToken cancellationToken = default)
+    {
+        await _context.EnsureTransactionAsync(cancellationToken);
+        _context.Vehicles.Remove(vehicle);
+    }
+
     public async Task AddAsync(Vehicle vehicle, CancellationToken cancellationToken = default)
     {
         await _context.Vehicles.AddAsync(vehicle, cancellationToken);

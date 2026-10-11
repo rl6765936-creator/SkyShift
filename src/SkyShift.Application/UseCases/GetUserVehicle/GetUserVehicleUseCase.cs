@@ -26,11 +26,11 @@ public class GetUserVehicleUseCase
 
     public async Task<VehicleResponse?> ExecuteAsync(int userId, CancellationToken cancellationToken = default)
     {
-        var activeAssignment = await _vehicleAssignmentRepository.GetActiveForUserAsync(userId, cancellationToken);
+        var activeAssignment = await _vehicleAssignmentRepository.GetActiveForUserForReadAsync(userId, cancellationToken);
         if (activeAssignment is null)
             return null;
 
-        var vehicle = await _vehicleRepository.GetByIdAsync(activeAssignment.VehicleId, cancellationToken);
+        var vehicle = await _vehicleRepository.GetByIdForReadAsync(activeAssignment.VehicleId, cancellationToken);
         if (vehicle is null)
             return null;
 

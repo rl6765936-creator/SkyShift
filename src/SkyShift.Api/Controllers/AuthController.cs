@@ -33,15 +33,9 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Registers a new user and returns a JWT immediately -- the user is
-    /// never required to call Login separately just to obtain their first
-    /// token. Duplicate email is not caught here: RegisterUserUseCase
-    /// throws InvalidOperationException, which is left to propagate to the
-    /// global SkyShiftExceptionHandler, which maps it to 409 Conflict.
-    ///
-    /// 201 Created carries a Location header pointing at the created User
-    /// (no GET-by-id endpoint exists to route through, so the URI is built
-    /// directly -- the response body/status code are otherwise unchanged).
+    /// Registers a new user and returns a JWT immediately, so no separate login is needed. A
+    /// duplicate email throws EmailAlreadyRegisteredException, which SkyShiftExceptionHandler maps
+    /// to 409. The 201 response's Location header is generated from the GET /api/users/{id} route.
     /// </summary>
     [HttpPost("register")]
     public async Task<ActionResult<LoginApiResponse>> Register([FromBody] RegisterUserRequest request, CancellationToken cancellationToken)
@@ -63,30 +57,19 @@ public class AuthController : ControllerBase
             Token = token
         };
 
-        return Created($"/api/users/{registerResult.Id}", response);
+        return CreatedAtRoute(UsersController.GetByIdRouteName, new { id = registerResult.Id }, response);
     }
 
     /// <summary>
-    /// Authenticates a user and returns a JWT. Invalid credentials are
-    /// represented by LoginUserUseCase throwing InvalidOperationException --
-    /// that same exception type maps to 409 everywhere else in the system,
-    /// so it is caught locally, here only, and translated to 401
-    /// Unauthorized instead of being left to reach the global exception
-    /// handler. Any other, unexpected exception is not caught here and
-    /// still reaches the global handler normally.
+    /// Authenticates a user and returns a JWT. Invalid credentials surface
+    /// as InvalidCredentialsException, which the global
+    /// SkyShiftExceptionHandler maps to 401 with code invalid_credentials
+    /// (and bilingual messages) -- no local try/catch is needed here.
     /// </summary>
     [HttpPost("login")]
     public async Task<ActionResult<LoginApiResponse>> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
-        LoginResponse loginResult;
-        try
-        {
-            loginResult = await _loginUserUseCase.ExecuteAsync(request, cancellationToken);
-        }
-        catch (InvalidOperationException)
-        {
-            return Unauthorized();
-        }
+        var loginResult = await _loginUserUseCase.ExecuteAsync(request, cancellationToken);
 
         var token = _jwtTokenService.GenerateToken(
             loginResult.Id,

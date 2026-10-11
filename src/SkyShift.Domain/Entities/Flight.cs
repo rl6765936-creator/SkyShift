@@ -13,11 +13,9 @@ public class Flight
     public int? VehicleId { get; private set; }
 
     /// <summary>
-    /// Business date reported by the user -- the date they claim the flight
-    /// occurred. Client-supplied, format-validated only. Used wherever
-    /// business logic explicitly means "the date of the flight" (e.g.
-    /// LotteryEligibilityService completion counting). Never replaced by
-    /// CreatedAt.
+    /// The date and time the user reports for the flight. It must be UTC and within the active
+    /// assignment's trial window (VehicleAssignment.ValidateFlightDate), and completed-flight
+    /// counts use it. It is never replaced by CreatedAt.
     /// </summary>
     public DateTime Date { get; private set; }
 

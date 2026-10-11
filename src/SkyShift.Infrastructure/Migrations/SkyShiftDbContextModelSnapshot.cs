@@ -106,10 +106,25 @@ namespace SkyShift.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("CatalogIdentification")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("CatalogItemId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("DescriptionHe")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(2048)
@@ -117,6 +132,14 @@ namespace SkyShift.Infrastructure.Migrations
 
                     b.Property<bool>("IsPersonalExperimental")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Manufacturer")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("MaxRoadSpeedAccuracy")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int?>("MaxSpeedKmh")
                         .HasColumnType("int");
@@ -133,12 +156,20 @@ namespace SkyShift.Infrastructure.Migrations
                     b.Property<int?>("Seats")
                         .HasColumnType("int");
 
+                    b.Property<string>("SeatsAccuracy")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CatalogItemId")
+                        .IsUnique()
+                        .HasFilter("[CatalogItemId] IS NOT NULL");
 
                     b.ToTable("Vehicles", (string)null);
                 });
@@ -172,6 +203,375 @@ namespace SkyShift.Infrastructure.Migrations
                     b.ToTable("VehicleAssignments", (string)null);
                 });
 
+            modelBuilder.Entity("SkyShift.Domain.Entities.VehicleCatalogItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("DescriptionHe")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Identification")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("nvarchar(260)");
+
+                    b.Property<string>("Manufacturer")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("MaxRoadSpeedAccuracy")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("MaxRoadSpeedKmh")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ModelName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Seats")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SeatsAccuracy")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImageUrl")
+                        .IsUnique();
+
+                    b.ToTable("VehicleCatalogItems", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Compact SUV based on the Audi Q3. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "רכב פנאי קומפקטי המבוסס על Audi Q3. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-01.webp",
+                            Manufacturer = "Audi",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 210,
+                            ModelName = "Q3 (2nd generation)",
+                            Seats = 5,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Small electric crossover. Visual inspiration only: the exact model is not verified. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "קרוסאובר חשמלי קטן. השראה חזותית בלבד: הדגם המדויק לא אומת. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "VisualInspiration",
+                            ImageUrl = "/catalog/car-02.webp",
+                            Manufacturer = "Geely",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 150,
+                            ModelName = "Geometry E (uncertain)",
+                            Seats = 5,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Hybrid hypercar based on the Koenigsegg Regera. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "מכונית־על היברידית המבוססת על Koenigsegg Regera. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-03.webp",
+                            Manufacturer = "Koenigsegg",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 400,
+                            ModelName = "Regera",
+                            Seats = 2,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Description = "Hypercar based on the Bugatti Chiron Super Sport. The 440 km/h road top speed is the manufacturer's electronically limited figure. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "מכונית־על המבוססת על Bugatti Chiron Super Sport. מהירות הכביש המרבית של 440 קמ״ש היא הנתון של היצרן, מוגבלת אלקטרונית. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-04.webp",
+                            Manufacturer = "Bugatti",
+                            MaxRoadSpeedAccuracy = "Verified",
+                            MaxRoadSpeedKmh = 440,
+                            ModelName = "Chiron Super Sport",
+                            Seats = 2,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Description = "Electric family SUV based on the Tesla Model X. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "רכב פנאי משפחתי חשמלי המבוסס על Tesla Model X. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-05.webp",
+                            Manufacturer = "Tesla",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 250,
+                            ModelName = "Model X",
+                            Seats = 5,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Description = "Four-seat BMW concept car shown in 2021. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "רכב קונספט של BMW בעל ארבעה מושבים שהוצג ב־2021. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-06.webp",
+                            Manufacturer = "BMW",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 180,
+                            ModelName = "i Vision Circular (concept)",
+                            Seats = 4,
+                            SeatsAccuracy = "Verified"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Description = "Camouflaged coupé prototype. Visual inspiration only: the exact model and variant are not verified. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "אב־טיפוס קופה מוסווה. השראה חזותית בלבד: הדגם והגרסה המדויקים לא אומתו. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "VisualInspiration",
+                            ImageUrl = "/catalog/car-07.webp",
+                            Manufacturer = "Mercedes-Benz",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 250,
+                            ModelName = "CLE Coupé (camouflaged prototype, uncertain)",
+                            Seats = 4,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Description = "Mercedes-Benz concept saloon. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "מכונית קונספט של Mercedes-Benz. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-08.webp",
+                            Manufacturer = "Mercedes-Benz",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 210,
+                            ModelName = "Concept CLA Class (concept)",
+                            Seats = 5,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Description = "Electric saloon based on the Nissan N7. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "מכונית סדאן חשמלית המבוססת על Nissan N7. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-09.webp",
+                            Manufacturer = "Nissan",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 170,
+                            ModelName = "N7",
+                            Seats = 5,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Description = "BMW concept saloon. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "מכונית קונספט של BMW. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-10.webp",
+                            Manufacturer = "BMW",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 200,
+                            ModelName = "Vision Neue Klasse (concept)",
+                            Seats = 5,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Description = "Executive saloon based on the BMW 5 Series in an art livery. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "מכונית מנהלים המבוססת על BMW סדרה 5 בעיטוף אמנותי. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-11.webp",
+                            Manufacturer = "BMW",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 250,
+                            ModelName = "5 Series (G30, art livery)",
+                            Seats = 5,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Description = "Lancia concept car. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "רכב קונספט של Lancia. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-12.webp",
+                            Manufacturer = "Lancia",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 180,
+                            ModelName = "Pu+Ra HPE (concept)",
+                            Seats = 4,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Description = "Tiny electric city car. Visual inspiration only: the exact model is not verified. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "מכונית עירונית חשמלית זעירה. השראה חזותית בלבד: הדגם המדויק לא אומת. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "VisualInspiration",
+                            ImageUrl = "/catalog/car-13.webp",
+                            Manufacturer = "Bestune",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 100,
+                            ModelName = "Xiaoma (uncertain)",
+                            Seats = 4,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            Description = "Plug-in hybrid hatchback based on the Toyota Prius. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "האצ'בק היברידי נטען המבוסס על Toyota Prius. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-14.webp",
+                            Manufacturer = "Toyota",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 175,
+                            ModelName = "Prius Plug-in Hybrid (5th generation)",
+                            Seats = 5,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            Description = "SUV prototype of the second-generation Škoda Kodiaq. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "אב־טיפוס של רכב הפנאי Škoda Kodiaq מהדור השני. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-15.webp",
+                            Manufacturer = "Škoda",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 200,
+                            ModelName = "Kodiaq (2nd generation, camouflaged prototype)",
+                            Seats = 5,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            Description = "Convertible grand tourer prototype of the Maserati GranCabrio. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "אב־טיפוס של מכונית הגראנד טורר הפתוחה Maserati GranCabrio. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-16.webp",
+                            Manufacturer = "Maserati",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 300,
+                            ModelName = "GranCabrio (camouflaged prototype)",
+                            Seats = 4,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            Description = "Low-slung hypercar. Visual inspiration only: the manufacturer and model are not identified. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "מכונית־על נמוכה. השראה חזותית בלבד: היצרן והדגם לא זוהו. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "VisualInspiration",
+                            ImageUrl = "/catalog/car-17.webp",
+                            Manufacturer = "Unidentified",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 350,
+                            ModelName = "Hypercar (unidentified)",
+                            Seats = 2,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            Description = "Compact electric SUV based on the Mercedes-Benz EQB. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "רכב פנאי חשמלי קומפקטי המבוסס על Mercedes-Benz EQB. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-18.webp",
+                            Manufacturer = "Mercedes-Benz",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 160,
+                            ModelName = "EQB",
+                            Seats = 5,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            Description = "Five-seat SUV prototype of the MINI Countryman. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "אב־טיפוס של רכב הפנאי MINI Countryman בעל חמישה מושבים. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-19.webp",
+                            Manufacturer = "MINI",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 210,
+                            ModelName = "Countryman (3rd generation, camouflaged prototype)",
+                            Seats = 5,
+                            SeatsAccuracy = "Verified"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            Description = "Tiny electric city car based on the Chery QQ Ice Cream. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "מכונית עירונית חשמלית זעירה המבוססת על Chery QQ Ice Cream. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-20.webp",
+                            Manufacturer = "Chery",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 100,
+                            ModelName = "QQ Ice Cream",
+                            Seats = 4,
+                            SeatsAccuracy = "Illustrative"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            Description = "Electric three-door hatch based on the MINI Cooper E. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "האצ'בק חשמלי בן שלוש דלתות המבוסס על MINI Cooper E. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-21.webp",
+                            Manufacturer = "MINI",
+                            MaxRoadSpeedAccuracy = "Verified",
+                            MaxRoadSpeedKmh = 160,
+                            ModelName = "Cooper E (3-door)",
+                            Seats = 4,
+                            SeatsAccuracy = "Verified"
+                        },
+                        new
+                        {
+                            Id = 22,
+                            Description = "Electric SUV based on the Peugeot E-3008. Specifications marked as illustrative are SkyShift sample data, not manufacturer figures. The propellers are a SkyShift illustration; the road car does not fly.",
+                            DescriptionHe = "רכב פנאי חשמלי המבוסס על Peugeot E-3008. מפרטים המסומנים כהמחשה הם נתוני דוגמה של SkyShift ואינם נתוני יצרן. המדחפים הם הדמיה של SkyShift בלבד; רכב הכביש אינו טס.",
+                            Identification = "Identified",
+                            ImageUrl = "/catalog/car-22.webp",
+                            Manufacturer = "Peugeot",
+                            MaxRoadSpeedAccuracy = "Illustrative",
+                            MaxRoadSpeedKmh = 170,
+                            ModelName = "E-3008",
+                            Seats = 5,
+                            SeatsAccuracy = "Illustrative"
+                        });
+                });
+
             modelBuilder.Entity("SkyShift.Domain.Entities.Flight", b =>
                 {
                     b.HasOne("SkyShift.Domain.Entities.User", null)
@@ -183,6 +583,14 @@ namespace SkyShift.Infrastructure.Migrations
                     b.HasOne("SkyShift.Domain.Entities.Vehicle", null)
                         .WithMany()
                         .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("SkyShift.Domain.Entities.Vehicle", b =>
+                {
+                    b.HasOne("SkyShift.Domain.Entities.VehicleCatalogItem", null)
+                        .WithMany()
+                        .HasForeignKey("CatalogItemId")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 

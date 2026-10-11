@@ -8,13 +8,9 @@ using SkyShift.Infrastructure.Security;
 namespace SkyShift.Infrastructure;
 
 /// <summary>
-/// Composition-root extension for registering Infrastructure's
-/// implementations. Takes the connection string as a plain value rather than
-/// IConfiguration, so Infrastructure does not need a 4th package just to read
-/// configuration -- resolving the actual connection string (appsettings,
-/// environment, secrets) is left entirely to the caller (SkyShift.Api, once
-/// it exists), consistent with "connection string handling deferred to the
-/// future API" in the approved plan.
+/// Registers the Infrastructure implementations (DbContext, repositories, UnitOfWork, password
+/// hasher). It takes the connection string as a plain value, so reading configuration stays in the
+/// Api's composition root.
 /// </summary>
 public static class DependencyInjection
 {
@@ -27,6 +23,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IVehicleRepository, VehicleRepository>();
+        services.AddScoped<IVehicleCatalogRepository, VehicleCatalogRepository>();
         services.AddScoped<IVehicleAssignmentRepository, VehicleAssignmentRepository>();
         services.AddScoped<IFlightRepository, FlightRepository>();
 

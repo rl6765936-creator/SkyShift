@@ -34,7 +34,7 @@ public class RecordFlightUseCase
 
         var activeAssignment = await _vehicleAssignmentRepository.GetActiveForUserAsync(userId, cancellationToken);
         if (activeAssignment is null)
-            throw new InvalidOperationException("User has no active vehicle assignment.");
+            throw new NoActiveAssignmentException();
 
         var nowUtc = _timeProvider.GetUtcNow().UtcDateTime;
         activeAssignment.ValidateFlightDate(request.Date, nowUtc);

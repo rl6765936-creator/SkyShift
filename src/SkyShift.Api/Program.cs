@@ -9,6 +9,7 @@ using SkyShift.Api.Middleware;
 using SkyShift.Application.Mapping;
 using SkyShift.Application.UseCases.ChangeVehicleStatus;
 using SkyShift.Application.UseCases.CreateVehicle;
+using SkyShift.Application.UseCases.DeleteVehicle;
 using SkyShift.Application.UseCases.GetActiveAssignments;
 using SkyShift.Application.UseCases.GetAllFlights;
 using SkyShift.Application.UseCases.GetAllUsersActivity;
@@ -17,8 +18,11 @@ using SkyShift.Application.UseCases.GetAssignmentHistory;
 using SkyShift.Application.UseCases.GetAvailableVehicles;
 using SkyShift.Application.UseCases.GetFlightStats;
 using SkyShift.Application.UseCases.GetManagerDashboard;
+using SkyShift.Application.UseCases.GetManagerVehicle;
 using SkyShift.Application.UseCases.GetUserDashboard;
+using SkyShift.Application.UseCases.GetUserProfile;
 using SkyShift.Application.UseCases.GetUserVehicle;
+using SkyShift.Application.UseCases.GetVehicleCatalog;
 using SkyShift.Application.UseCases.LoginUser;
 using SkyShift.Application.UseCases.RecordFlight;
 using SkyShift.Application.UseCases.RegisterUser;
@@ -103,6 +107,7 @@ builder.Services.AddScoped<RecordFlightUseCase>();
 builder.Services.AddScoped<GetUserDashboardUseCase>();
 
 builder.Services.AddScoped<CreateVehicleUseCase>();
+builder.Services.AddScoped<GetVehicleCatalogUseCase>();
 builder.Services.AddScoped<GetAllVehiclesUseCase>();
 builder.Services.AddScoped<ChangeVehicleStatusUseCase>();
 builder.Services.AddScoped<GetAllFlightsUseCase>();
@@ -111,6 +116,9 @@ builder.Services.AddScoped<GetActiveAssignmentsUseCase>();
 builder.Services.AddScoped<GetAssignmentHistoryUseCase>();
 builder.Services.AddScoped<GetAllUsersActivityUseCase>();
 builder.Services.AddScoped<GetManagerDashboardUseCase>();
+builder.Services.AddScoped<GetManagerVehicleUseCase>();
+builder.Services.AddScoped<DeleteVehicleUseCase>();
+builder.Services.AddScoped<GetUserProfileUseCase>();
 
 // Registered like any other Use Case; invoked once at startup below. See
 // SeedDemoUsersUseCase for the idempotency guarantee.

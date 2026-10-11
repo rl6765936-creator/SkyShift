@@ -6,26 +6,12 @@ using SkyShift.Domain.Services;
 namespace SkyShift.Application.UseCases.GetManagerDashboard;
 
 /// <summary>
-/// Aggregates the Manager MVP dashboard. Mirrors GetUserDashboardUseCase's
-/// principle: Application fetches data and assembles the response, all
-/// business calculation stays in Domain (LotteryEligibilityService) or is a
-/// simple, explicitly-approved formula documented on ManagerDashboardResponse.
-///
-/// Utilization = InUse / (Total - Retired), Retired excluded from the
-/// denominator (0 when that denominator is 0).
-///
-/// Participation is intentionally two separate numbers, never one invented
-/// metric:
-///  - EngagementRatePercentage: % of registered Users who have ever created
-///    at least one VehicleAssignment (active or historical), i.e. the union
-///    of GetAllActiveAsync() and GetHistoryAsync(null, null) by UserId.
-///  - ComplianceRatePercentage: the existing, approved
-///    LotteryEligibilityService.CalculateCompletionPercentage, computed per
-///    User exactly as GetUserDashboardUseCase computes it for a single user
-///    (GetCompletedCountAsync over that user's active assignment's
-///    StartDate..EndDate), then averaged across Users who currently have an
-///    active assignment. This stays on Flight.Date -- it is NOT switched to
-///    Flight.CreatedAt.
+/// Builds the Manager dashboard: totals, vehicle status breakdown, utilization (InUse / (Total -
+/// Retired), 0 when that is 0) and engagement rate (users who ever had an assignment). The
+/// compliance rate averages LotteryEligibilityService.CalculateCompletionPercentage over users with
+/// an active assignment, counting flights by Date within each assignment's window. Flight counts
+/// come from the database: one batched query for all active assignments and one total count, never
+/// a query per assignment.
 /// </summary>
 public class GetManagerDashboardUseCase
 {
@@ -52,7 +38,7 @@ public class GetManagerDashboardUseCase
     public async Task<ManagerDashboardResponse> ExecuteAsync(CancellationToken cancellationToken = default)
     {
         var users = await _userRepository.GetAllAsync(cancellationToken);
-        var allFlights = await _flightRepository.GetAllAsync(null, null, null, null, cancellationToken);
+        var totalFlights = await _flightRepository.CountAsync(cancellationToken);
         var vehicles = await _vehicleRepository.GetAllAsync(cancellationToken);
         var activeAssignments = await _vehicleAssignmentRepository.GetAllActiveAsync(cancellationToken);
         var historicalAssignments = await _vehicleAssignmentRepository.GetHistoryAsync(null, null, cancellationToken);
@@ -84,15 +70,19 @@ public class GetManagerDashboardUseCase
         {
             var complianceSum = 0.0;
             var countedUsers = 0;
+            var usersById = users.ToDictionary(u => u.Id);
+
+            // One query for all active assignments (each with its own date window),
+            // instead of one count query per assignment.
+            var completedByAssignment = await _flightRepository.GetCompletedCountsForAssignmentsAsync(
+                activeAssignments.Select(a => a.Id).ToList(), cancellationToken);
 
             foreach (var assignment in activeAssignments)
             {
-                var user = users.FirstOrDefault(u => u.Id == assignment.UserId);
-                if (user is null)
+                if (!usersById.TryGetValue(assignment.UserId, out var user))
                     continue;
 
-                var completedFlights = await _flightRepository.GetCompletedCountAsync(
-                    assignment.UserId, assignment.StartDate, assignment.EndDate, cancellationToken);
+                completedByAssignment.TryGetValue(assignment.Id, out var completedFlights);
 
                 complianceSum += _lotteryEligibilityService.CalculateCompletionPercentage(user, completedFlights);
                 countedUsers++;
@@ -104,7 +94,7 @@ public class GetManagerDashboardUseCase
         return new ManagerDashboardResponse
         {
             TotalUsers = users.Count,
-            TotalFlights = allFlights.Count,
+            TotalFlights = totalFlights,
             ActiveAssignments = activeAssignments.Count,
             VehiclesByStatus = vehiclesByStatus,
             CurrentUtilizationPercentage = utilization,

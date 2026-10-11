@@ -4,13 +4,9 @@ using SkyShift.Application.DTOs;
 namespace SkyShift.Application.UseCases.GetAllUsersActivity;
 
 /// <summary>
-/// Manager user/activity monitoring. Exposes raw per-user facts only
-/// (TotalFlights, HasActiveAssignment, LastFlightCreatedAt) -- deliberately
-/// does NOT compute or expose an "Active User" boolean, since there is no
-/// approved business definition for it yet. Reuses the already-approved
-/// IFlightRepository.GetAllAsync and IVehicleAssignmentRepository.GetAllActiveAsync
-/// (both already needed for other Manager endpoints) rather than adding new,
-/// narrower repository methods for this one aggregation.
+/// Manager user activity: raw per-user facts (TotalFlights, HasActiveAssignment,
+/// LastFlightCreatedAt), with no invented "active user" flag. It aggregates in memory over
+/// IFlightRepository.GetAllAsync and IVehicleAssignmentRepository.GetAllActiveAsync.
 /// </summary>
 public class GetAllUsersActivityUseCase
 {

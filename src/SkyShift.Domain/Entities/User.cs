@@ -3,10 +3,8 @@ using SkyShift.Domain.Enums;
 namespace SkyShift.Domain.Entities;
 
 /// <summary>
-/// A registered participant in the "עולים לאוויר" initiative.
-/// Holds only a PasswordHash — never a plain-text password, and has no
-/// knowledge of which hashing algorithm produced it (that is an Application/
-/// Infrastructure concern, via IPasswordHasher).
+/// A registered participant in the SkyShift initiative. It stores only a password hash, never a
+/// plain-text password, and does not know which algorithm produced it (IPasswordHasher).
 /// </summary>
 public class User
 {
@@ -31,16 +29,9 @@ public class User
     private readonly List<VehicleAssignment> _vehicleAssignments = new();
 
     /// <summary>
-    /// EF Core navigation side of the User &lt;-&gt; Vehicle many-to-many
-    /// relationship, realized through VehicleAssignment (see
-    /// VehicleAssignment.User/Vehicle and VehicleAssignmentConfiguration) --
-    /// a User can hold many VehicleAssignments over time, each to a
-    /// different Vehicle, and a Vehicle can likewise be assigned to many
-    /// different Users over time, so the pairing itself is many-to-many even
-    /// though only one assignment per User is ever active at once.
-    /// Read-only here: populated by EF Core via the private backing field
-    /// when eager-loaded, never mutated directly -- assignments are still
-    /// created exclusively through SelectVehicleUseCase, unchanged.
+    /// EF Core navigation for the many-to-many relationship between User and Vehicle, realized
+    /// through VehicleAssignment. It is read-only and populated by EF Core when included;
+    /// assignments are created only through SelectVehicleUseCase.
     /// </summary>
     public IReadOnlyCollection<VehicleAssignment> VehicleAssignments => _vehicleAssignments.AsReadOnly();
 
@@ -68,13 +59,8 @@ public class User
     }
 
     /// <summary>
-    /// Promotes this User to Manager. Exists solely to support deterministic
-    /// demo-user seeding at startup (see Application's SeedDemoUsersUseCase) --
-    /// it is never invoked from any Controller or public API path, and no
-    /// request DTO anywhere carries a Role for a client to set. This
-    /// preserves the original decision that Manager cannot be created
-    /// through the public API: the only caller of this method is the
-    /// internal startup seeder, which runs outside any HTTP request.
+    /// Promotes this user to Manager. It is called only by the startup demo-user seeder
+    /// (SeedDemoUsersUseCase), and no API request can set a role.
     /// </summary>
     public void PromoteToManager()
     {

@@ -5,12 +5,9 @@ using SkyShift.Domain.Entities;
 namespace SkyShift.Infrastructure.Security;
 
 /// <summary>
-/// Wraps ASP.NET Core Identity's PasswordHasher&lt;TUser&gt; (PBKDF2-based),
-/// provided by the approved Microsoft.Extensions.Identity.Core package.
-/// TUser is SkyShift's own Domain User only to satisfy the generic API's
-/// shape -- the default implementation does not read or depend on any of
-/// User's properties, only the password string passed explicitly, so
-/// passing no real instance is safe here.
+/// Wraps ASP.NET Core Identity's PBKDF2-based PasswordHasher&lt;TUser&gt; from
+/// Microsoft.Extensions.Identity.Core. The Domain User is used only as the generic type argument;
+/// the default implementation reads only the password, so no user instance is needed.
 /// </summary>
 public class PasswordHasher : IPasswordHasher
 {

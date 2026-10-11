@@ -3,19 +3,10 @@ using System.ComponentModel.DataAnnotations;
 namespace SkyShift.Api.Authentication;
 
 /// <summary>
-/// Plain configuration POCO bound to the "Jwt" configuration section
-/// (appsettings.json for non-secret defaults, User Secrets in Development
-/// and Environment Variables/Secret Store in Production for SigningKey).
-/// Holds no logic and no hard-coded secret -- SigningKey is only ever
-/// populated by configuration binding, never assigned a literal value here.
-///
-/// The [Required]/[Range] attributes below are enforced at startup via
-/// Program.cs's AddOptions&lt;JwtOptions&gt;().ValidateDataAnnotations().ValidateOnStart(),
-/// mirroring the existing fail-fast check already done for
-/// ConnectionStrings:SkyShiftDb -- a missing/blank Jwt:SigningKey (the
-/// typical case before User Secrets are configured) now fails immediately
-/// with a clear message instead of only surfacing later, cryptically, on
-/// the first token generation or validation attempt.
+/// Configuration bound from the "Jwt" section; SigningKey comes only from configuration (User
+/// Secrets in Development), never from code. The [Required]/[Range] rules are validated at startup
+/// through ValidateDataAnnotations().ValidateOnStart() in Program.cs. A missing signing key
+/// therefore fails fast with a clear message instead of on the first token operation.
 /// </summary>
 public class JwtOptions
 {
