@@ -1,0 +1,28 @@
+# Build output and IDE state
+**/bin/
+**/obj/
+**/.vs/
+**/.idea/
+**/.vscode/
+**/*.user
+**/*.suo
+
+# Not needed by the API image
+.git/
+.github/
+tests/
+tools/
+_migration-review/
+**/TestResults/
+*.md
+
+# Runtime logs and anything that could hold local secrets or data
+**/logs/
+**/internal-nlog*.txt
+**/.env
+**/.env.*
+**/secrets.json
+**/*.bak
+**/*.pfx
+**/*.pem
+**/*.key

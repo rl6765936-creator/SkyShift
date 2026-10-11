@@ -81,3 +81,16 @@ Deleting a fleet Vehicle (`DELETE /api/manager/vehicles/{id}`) uses the same pro
 3. **Apply migrations**: `dotnet ef database update --project src/SkyShift.Infrastructure --startup-project src/SkyShift.Api`.
 4. **Run**: `dotnet run --project src/SkyShift.Api` (or F5 in Visual Studio). Swagger opens automatically at `https://localhost:7080/swagger` (see `src/SkyShift.Api/Properties/launchSettings.json`). The two demo accounts above are seeded automatically on first startup — no manual steps needed to log in.
 5. **Run tests**: `dotnet test` from the solution root (see "Tests" above).
+
+## Deploying (Docker / Render)
+
+The root `Dockerfile` builds and publishes `SkyShift.Api` on .NET 8 and runs it as a non-root user in `Production`. On Render, create a **Web Service** with runtime **Docker** (Dockerfile path `./Dockerfile`, build context `.`). The API listens on Render's `PORT` (see `Hosting/PlatformPort.cs`); Render terminates HTTPS. CORS allows `https://skyshift-react.onrender.com` via `Cors:AllowedOrigins` in `appsettings.json`.
+
+Settings come only from environment variables (ASP.NET Core maps `__` to `:`); never put their values in files:
+
+- `ConnectionStrings__SkyShiftDb` — SQL Server connection string (secret).
+- `Jwt__SigningKey` — random key of at least 32 bytes (secret).
+- `Jwt__Issuer`, `Jwt__Audience` — token issuer/audience names (required, not secret).
+- Optional: `Jwt__ExpirationMinutes` (default 60), `AutoMapper__LicenseKey`, `Cors__AllowedOrigins__0` to override the allowed origin.
+
+The container does not apply migrations: run `dotnet ef database update` against the target database yourself before the first start. Demo seeding (see "Seeding") runs on every startup in every environment, so the deployed demo has the two public demo accounts.

@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using NLog.Web;
 using SkyShift.Api.Authentication;
+using SkyShift.Api.Hosting;
 using SkyShift.Api.Middleware;
 using SkyShift.Application.Mapping;
 using SkyShift.Application.UseCases.ChangeVehicleStatus;
@@ -32,6 +33,13 @@ using SkyShift.Domain.Services;
 using SkyShift.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Render (and similar hosts) provide the port to listen on in PORT; TLS ends at their proxy.
+// Without PORT, the usual ASP.NET Core URL settings apply (launchSettings.json locally).
+if (PlatformPort.ResolveUrl(builder.Configuration) is { } platformUrl)
+{
+    builder.WebHost.UseUrls(platformUrl);
+}
 
 // NLog is wired in as the provider underneath ILogger<T>; actual output
 // targets (file/console) are configured in nlog.config.
