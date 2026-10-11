@@ -7,11 +7,9 @@ namespace SkyShift.Application.UseCases.GetManagerDashboard;
 
 /// <summary>
 /// Builds the Manager dashboard: totals, vehicle status breakdown, utilization (InUse / (Total -
-/// Retired), 0 when that is 0) and engagement rate (users who ever had an assignment). The
-/// compliance rate averages LotteryEligibilityService.CalculateCompletionPercentage over users with
-/// an active assignment, counting flights by Date within each assignment's window. Flight counts
-/// come from the database: one batched query for all active assignments and one total count, never
-/// a query per assignment.
+/// Retired), 0 when that is 0), engagement rate and the compliance rate of users with an active
+/// assignment. Flight counts come from the database in one batched query for all active assignments
+/// plus one total count, never a query per assignment.
 /// </summary>
 public class GetManagerDashboardUseCase
 {

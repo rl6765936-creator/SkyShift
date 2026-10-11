@@ -7,10 +7,9 @@ using SkyShift.Domain.Exceptions;
 namespace SkyShift.Application.UseCases.ChangeVehicleStatus;
 
 /// <summary>
-/// Manager-driven vehicle status change, including Retire; the Domain's Vehicle methods decide
-/// which transitions are legal. InUse cannot be requested here because it is only reached through
-/// Vehicle.Assign() during vehicle selection. Illegal transitions throw
-/// InvalidVehicleStatusTransitionException, which propagates to the global exception handler.
+/// Manager-driven vehicle status change, including Retire; the Domain's Vehicle methods decide which
+/// transitions are legal and throw InvalidVehicleStatusTransitionException otherwise. InUse cannot be
+/// requested here because it is only reached through Vehicle.Assign() during vehicle selection.
 /// </summary>
 public class ChangeVehicleStatusUseCase
 {

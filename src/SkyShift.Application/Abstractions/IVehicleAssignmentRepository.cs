@@ -24,11 +24,9 @@ public interface IVehicleAssignmentRepository
     Task<IReadOnlyList<VehicleAssignment>> GetAllActiveAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Manager MVP addition. Returns every VehicleAssignment that has
-    /// already ended (EndDate in the past), optionally filtered by user
-    /// and/or vehicle. Together with GetAllActiveAsync, covers every
-    /// VehicleAssignment row exactly once (an assignment is always either
-    /// currently active or already ended).
+    /// Returns every VehicleAssignment that has already ended (EndDate in the past), optionally
+    /// filtered by user and/or vehicle. Together with GetAllActiveAsync it covers every assignment row
+    /// exactly once.
     /// </summary>
     Task<IReadOnlyList<VehicleAssignment>> GetHistoryAsync(int? userId, int? vehicleId, CancellationToken cancellationToken = default);
 }

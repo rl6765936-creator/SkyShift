@@ -7,10 +7,9 @@ using SkyShift.Domain.Exceptions;
 namespace SkyShift.Application.UseCases.RegisterUser;
 
 /// <summary>
-/// Registers a new User. Email-uniqueness is checked here (not in Domain)
-/// because a single User instance cannot know about other Users — it
-/// requires a Repository query. All other invariants (AverageDailyTrips,
-/// PasswordHash) are enforced by User.Create itself.
+/// Registers a new User; email uniqueness is checked here because it needs a repository query (the
+/// unique index is the final guard). All other invariants (AverageDailyTrips, PasswordHash) are
+/// enforced by User.Create.
 /// </summary>
 public class RegisterUserUseCase
 {

@@ -8,9 +8,8 @@ namespace SkyShift.Api.Authentication;
 
 /// <summary>
 /// Issues signed JWTs for an already authenticated user; JWT handling belongs to the Api, so
-/// Application and Domain have no token concept. It holds no business logic and does not access the
-/// database or any use case. The token carries the user id, email, name and role claims, and the
-/// role claim is what [Authorize(Roles = "Manager")] checks.
+/// Application and Domain have no token concept. The token carries the user id, email, name and role
+/// claims, and the role claim is what [Authorize(Roles = "Manager")] checks.
 /// </summary>
 public class JwtTokenService
 {

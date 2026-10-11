@@ -6,9 +6,8 @@ using SkyShift.Infrastructure.Persistence;
 namespace SkyShift.Infrastructure.Repositories;
 
 /// <summary>
-/// Read-only catalog queries. Not part of the SelectVehicle critical path,
-/// so no ambient Serializable transaction is opened here. "Used" means any
-/// Vehicle row references the item, regardless of that vehicle's status.
+/// Read-only catalog queries that never open the critical-path transaction. "Used" means any Vehicle
+/// row references the item, regardless of that vehicle's status.
 /// </summary>
 public class VehicleCatalogRepository : IVehicleCatalogRepository
 {

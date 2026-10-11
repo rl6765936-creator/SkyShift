@@ -4,11 +4,10 @@ using SkyShift.Domain.Enums;
 namespace SkyShift.Application.DTOs;
 
 /// <summary>
-/// One catalog model still available to add to the fleet. Seats and the
-/// maximum road speed are always present; each has its own accuracy flag:
-/// Verified (official manufacturer source) or Illustrative (SkyShift sample
-/// data, not a manufacturer specification). Propellers in the image are a
-/// SkyShift illustration; no flight specification is given or implied.
+/// One catalog model still available to add to the fleet; seats and maximum road speed are always
+/// present, each flagged Verified (official manufacturer source) or Illustrative (SkyShift sample
+/// data). The propellers in the image are a SkyShift illustration, and no flight specification is given
+/// or implied.
 /// </summary>
 public class VehicleCatalogResponse
 {

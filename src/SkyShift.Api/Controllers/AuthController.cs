@@ -8,11 +8,8 @@ using SkyShift.Application.UseCases.RegisterUser;
 namespace SkyShift.Api.Controllers;
 
 /// <summary>
-/// MVP authentication endpoints: Register and Login. Thin presentation
-/// code only -- it calls Application Use Cases, turns the result into a
-/// signed JWT via the existing API-only JwtTokenService, and maps the
-/// outcome to an HTTP response. No business logic, no password hashing,
-/// no repository/DbContext access, and no JWT generation logic of its own.
+/// Authentication endpoints: Register and Login. Thin presentation code that calls the use cases, wraps
+/// the result in a JWT from JwtTokenService and returns the HTTP response.
 /// </summary>
 [ApiController]
 [Route("api/auth")]
@@ -33,9 +30,9 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Registers a new user and returns a JWT immediately, so no separate login is needed. A
-    /// duplicate email throws EmailAlreadyRegisteredException, which SkyShiftExceptionHandler maps
-    /// to 409. The 201 response's Location header is generated from the GET /api/users/{id} route.
+    /// Registers a new user and returns a JWT immediately, with a Location header for GET
+    /// /api/users/{id}. A duplicate email throws EmailAlreadyRegisteredException, which
+    /// SkyShiftExceptionHandler maps to 409.
     /// </summary>
     [HttpPost("register")]
     public async Task<ActionResult<LoginApiResponse>> Register([FromBody] RegisterUserRequest request, CancellationToken cancellationToken)

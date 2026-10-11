@@ -11,10 +11,9 @@ using SkyShift.Application.UseCases.GetVehicleCatalog;
 namespace SkyShift.Api.Controllers;
 
 /// <summary>
-/// Manager fleet management: list unused catalog models, create a vehicle from one, read or delete
-/// a vehicle, and change its status. Thin presentation code that calls use cases; Status and
-/// CreatedAt are never accepted from the client, and transition rules live in the Domain's Vehicle
-/// methods. Exceptions propagate to SkyShiftExceptionHandler.
+/// Manager fleet management: list unused catalog models, create a vehicle from one, read or delete a
+/// vehicle, and change its status. Thin presentation code; Status and CreatedAt are never accepted from
+/// the client, and transition rules live in the Domain's Vehicle methods.
 /// </summary>
 [ApiController]
 [Route("api/manager/vehicles")]

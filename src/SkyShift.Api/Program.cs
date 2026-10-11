@@ -93,7 +93,9 @@ if (string.IsNullOrWhiteSpace(connectionString))
         "Connection string 'ConnectionStrings:SkyShiftDb' is not configured.");
 }
 
-builder.Services.AddInfrastructure(connectionString);
+// Explicit provider choice: "SqlServer" (default when unset) or "PostgreSQL".
+var databaseProvider = DatabaseProviderNames.Parse(builder.Configuration["Database:Provider"]);
+builder.Services.AddInfrastructure(connectionString, databaseProvider);
 
 builder.Services.AddAutoMapper(config =>
 {

@@ -7,10 +7,10 @@ using SkyShift.Domain.Services;
 namespace SkyShift.Application.UseCases.GetUserDashboard;
 
 /// <summary>
-/// Builds the user dashboard; ExpectedMonthlyTrips comes from User, and Percentage and
-/// IsLotteryEligible come from LotteryEligibilityService. CompletedFlights counts only flights
-/// within the active assignment's window, and without an active assignment it is 0 and
-/// CurrentVehicle is null. Reads are untracked and do not open the SelectVehicle transaction.
+/// Builds the user dashboard from User (ExpectedMonthlyTrips) and LotteryEligibilityService
+/// (Percentage, IsLotteryEligible), counting only flights within the active assignment's window.
+/// Without an active assignment CompletedFlights is 0 and CurrentVehicle is null; reads are untracked
+/// and open no transaction.
 /// </summary>
 public class GetUserDashboardUseCase
 {

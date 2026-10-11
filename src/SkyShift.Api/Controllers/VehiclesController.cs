@@ -9,10 +9,9 @@ using SkyShift.Application.UseCases.SelectVehicle;
 namespace SkyShift.Api.Controllers;
 
 /// <summary>
-/// User vehicle endpoints: list available vehicles, create an assignment (POST {id}/assignments,
-/// with POST select kept as an alias), and read the caller's active vehicle. Thin presentation
-/// code: it reads the user id from the JWT and calls the matching use case. Exceptions propagate to
-/// SkyShiftExceptionHandler.
+/// User vehicle endpoints: list available vehicles, create an assignment (POST {id}/assignments, with
+/// POST select kept as an alias), and read the caller's active vehicle. It reads the user id from the
+/// JWT and calls the matching use case.
 /// </summary>
 [ApiController]
 [Route("api/vehicles")]

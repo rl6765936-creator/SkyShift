@@ -7,9 +7,8 @@ using SkyShift.Application.UseCases.GetUserDashboard;
 namespace SkyShift.Api.Controllers;
 
 /// <summary>
-/// Returns the authenticated user's dashboard. Thin presentation code: it reads the user id from
-/// the JWT and calls GetUserDashboardUseCase, which computes every value. Exceptions propagate to
-/// SkyShiftExceptionHandler.
+/// Returns the authenticated user's dashboard. It reads the user id from the JWT and calls
+/// GetUserDashboardUseCase, which computes every value.
 /// </summary>
 [ApiController]
 [Route("api/dashboard")]

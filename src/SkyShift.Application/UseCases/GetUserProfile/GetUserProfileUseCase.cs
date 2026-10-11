@@ -6,10 +6,9 @@ using SkyShift.Domain.Exceptions;
 namespace SkyShift.Application.UseCases.GetUserProfile;
 
 /// <summary>
-/// Returns a single user's profile (the target of the registration Location header) as
-/// RegisterUserResponse, never including the password hash. Users may read only their own profile,
-/// while Managers may read any. Another user's id is answered like a missing id (404), so existing
-/// ids are not revealed.
+/// Returns a user's profile (the target of the registration Location header) as RegisterUserResponse,
+/// never including the password hash. Users may read only their own profile and Managers any; another
+/// user's id is answered like a missing id (404).
 /// </summary>
 public class GetUserProfileUseCase
 {

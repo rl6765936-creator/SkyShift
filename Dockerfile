@@ -1,5 +1,5 @@
 # SkyShift API image for Render (or any Docker host). .NET 8, matching every project's net8.0.
-# No secrets here: the connection string and JWT settings come from environment variables.
+# No secrets here: the database provider, connection string and JWT settings come from environment variables.
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -8,6 +8,8 @@ COPY src/SkyShift.Domain/SkyShift.Domain.csproj src/SkyShift.Domain/
 COPY src/SkyShift.Application/SkyShift.Application.csproj src/SkyShift.Application/
 COPY src/SkyShift.Infrastructure/SkyShift.Infrastructure.csproj src/SkyShift.Infrastructure/
 COPY src/SkyShift.Api/SkyShift.Api.csproj src/SkyShift.Api/
+# PostgreSQL migrations (referenced by the Api; used when Database__Provider=PostgreSQL).
+COPY src/SkyShift.Infrastructure.PostgreSql/SkyShift.Infrastructure.PostgreSql.csproj src/SkyShift.Infrastructure.PostgreSql/
 RUN dotnet restore src/SkyShift.Api/SkyShift.Api.csproj
 COPY src/ src/
 RUN dotnet publish src/SkyShift.Api/SkyShift.Api.csproj -c Release -o /app/publish --no-restore /p:UseAppHost=false

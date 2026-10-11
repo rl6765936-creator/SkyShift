@@ -5,10 +5,10 @@ using SkyShift.Domain.Entities;
 namespace SkyShift.Application.Mapping;
 
 /// <summary>
-/// The project's single AutoMapper profile for entity-to-response mappings. Most members map by
-/// name; road speed is mapped explicitly from catalog data, and AssignmentResponse.IsActive is set
-/// by the use cases. Aggregated responses (dashboards, flight statistics, user activity) are built
-/// directly in their use cases instead.
+/// The project's single AutoMapper profile for entity-to-response mappings; most members map by name,
+/// road speed is mapped from catalog data, and AssignmentResponse.IsActive is set by the use cases.
+/// Aggregated responses (dashboards, flight statistics, user activity) are built in their use cases
+/// instead.
 /// </summary>
 public class MappingProfile : Profile
 {

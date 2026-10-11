@@ -7,10 +7,9 @@ using SkyShift.Application.UseCases.GetFlightStats;
 namespace SkyShift.Api.Controllers;
 
 /// <summary>
-/// Manager flight monitoring: a filterable, database-paginated flight list and aggregated
-/// statistics. The from/to filters use the business Date field, while the statistics' activity
-/// trend is bucketed by the server CreatedAt timestamp. GetStats aggregates over the full filtered
-/// set, so it uses the unpaginated IFlightRepository.GetAllAsync.
+/// Manager flight monitoring: a filterable, database-paginated flight list and aggregated statistics
+/// over the full filtered set. The from/to filters use the business Date field, while the activity
+/// trend is bucketed by the server CreatedAt timestamp.
 /// </summary>
 [ApiController]
 [Route("api/manager/flights")]

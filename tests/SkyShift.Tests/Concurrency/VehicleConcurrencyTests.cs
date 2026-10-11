@@ -6,10 +6,10 @@ using Xunit;
 namespace SkyShift.Tests.Concurrency;
 
 /// <summary>
-/// Proves the Vehicle RowVersion concurrency token: two DbContexts read the same vehicle, both
-/// modify it, the first save succeeds and the second throws DbUpdateConcurrencyException. It uses
-/// the InMemory provider so no database is needed. Because InMemory does not regenerate rowversion
-/// values, the test sets the new RowVersion explicitly before the first save, as SQL Server would.
+/// Proves the Vehicle RowVersion concurrency token with the InMemory provider: two DbContexts modify
+/// the same vehicle, the first save succeeds and the second throws DbUpdateConcurrencyException.
+/// Because InMemory does not regenerate rowversion values, the test sets the new RowVersion before the
+/// first save, as SQL Server would.
 /// </summary>
 public class VehicleConcurrencyTests
 {

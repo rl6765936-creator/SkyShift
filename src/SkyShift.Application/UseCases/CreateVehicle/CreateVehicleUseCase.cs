@@ -7,11 +7,10 @@ using SkyShift.Domain.Exceptions;
 namespace SkyShift.Application.UseCases.CreateVehicle;
 
 /// <summary>
-/// Creates a fleet vehicle from an unused catalog model; it starts Available, gets a server
-/// CreatedAt, and copies all metadata from the catalog item. IsInUseAsync gives a clear early 409
-/// when the model is already used. If two requests race past that check, the unique index
-/// IX_Vehicles_CatalogItemId lets only one commit, and UnitOfWork reports the other as
-/// CatalogItemInUseException.
+/// Creates an Available fleet vehicle from an unused catalog model, with a server CreatedAt and all
+/// metadata copied from the catalog item. IsInUseAsync gives an early 409, and if two requests race
+/// past it the unique index IX_Vehicles_CatalogItemId lets only one commit (the other becomes
+/// CatalogItemInUseException).
 /// </summary>
 public class CreateVehicleUseCase
 {

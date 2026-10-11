@@ -7,10 +7,8 @@ using SkyShift.Application.UseCases.RecordFlight;
 namespace SkyShift.Api.Controllers;
 
 /// <summary>
-/// Records a flight for the authenticated user. Thin presentation code: it reads the user id from
-/// the JWT and calls RecordFlightUseCase, which derives the vehicle from the user's active
-/// assignment. Exceptions such as NoActiveAssignmentException propagate to
-/// SkyShiftExceptionHandler.
+/// Records a flight for the authenticated user. It reads the user id from the JWT and calls
+/// RecordFlightUseCase, which derives the vehicle from the user's active assignment.
 /// </summary>
 [ApiController]
 [Route("api/flights")]

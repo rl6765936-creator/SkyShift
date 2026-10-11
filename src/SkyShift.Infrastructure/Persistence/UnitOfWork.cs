@@ -1,5 +1,6 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using SkyShift.Application.Abstractions;
 using SkyShift.Domain.Entities;
 using SkyShift.Domain.Enums;
@@ -8,11 +9,11 @@ using SkyShift.Domain.Exceptions;
 namespace SkyShift.Infrastructure.Persistence;
 
 /// <summary>
-/// Implements IUnitOfWork: saves changes and commits or rolls back the ambient transaction opened
-/// by SkyShiftDbContext. It translates specific database failures into domain exceptions: duplicate
-/// flight, catalog model or email (unique indexes), a referenced vehicle delete (FK 547), and
-/// RowVersion or serialization conflicts (1205/1222, including EF Core's transient-failure wrapper)
-/// on a Vehicle or VehicleAssignment. Every other exception is rethrown unchanged.
+/// Implements IUnitOfWork: saves changes and commits or rolls back the ambient transaction opened by
+/// SkyShiftDbContext. It translates only specific SQL Server or PostgreSQL failures into domain
+/// exceptions (duplicate flight, catalog model or email, a referenced vehicle delete, and concurrency
+/// or serialization conflicts on a Vehicle or VehicleAssignment) and rethrows everything else
+/// unchanged.
 /// </summary>
 public class UnitOfWork : IUnitOfWork
 {
@@ -97,8 +98,8 @@ public class UnitOfWork : IUnitOfWork
                 throw;
             throw translated;
         }
-        // EF Core's default SQL Server execution strategy treats deadlock/lock-timeout
-        // as transient and wraps the DbUpdateException in an InvalidOperationException
+        // EF Core's default SQL Server and Npgsql execution strategies treat deadlock/lock-timeout
+        // (and PostgreSQL serialization failures) as transient and wraps the DbUpdateException in an InvalidOperationException
         // ("transient failure ... EnableRetryOnFailure"). Only that exact shape is
         // unwrapped here; any other InvalidOperationException propagates unchanged.
         // No automatic retry: replaying would require re-running the whole use case.
@@ -140,15 +141,17 @@ public class UnitOfWork : IUnitOfWork
         {
             if (inner is SqlException sql && sql.Number == 547)
                 return true;
+            if (inner is PostgresException pg && pg.SqlState == PostgresErrorCodes.ForeignKeyViolation)
+                return true;
         }
 
         return false;
     }
 
     /// <summary>
-    /// True when the DbUpdateException's root cause is a SQL Server serialization conflict: 1205
-    /// (deadlock victim) or 1222 (lock request timed out). Any other DbUpdateException is left
-    /// untranslated by this filter.
+    /// True when the DbUpdateException's root cause is a serialization conflict: SQL Server 1205
+    /// (deadlock victim) or 1222 (lock request timed out), or PostgreSQL 40001 (serialization
+    /// failure) or 40P01 (deadlock detected). Any other DbUpdateException is left untranslated.
     /// </summary>
     private static bool IsSelectVehicleSerializationConflict(DbUpdateException ex)
     {
@@ -156,14 +159,16 @@ public class UnitOfWork : IUnitOfWork
         {
             if (inner is SqlException sqlEx && (sqlEx.Number == 1205 || sqlEx.Number == 1222))
                 return true;
+            if (inner is PostgresException pg && pg.SqlState is PostgresErrorCodes.SerializationFailure or PostgresErrorCodes.DeadlockDetected)
+                return true;
         }
 
         return false;
     }
     /// <summary>
-    /// True only for a SQL Server unique-key violation (2601/2627) on the
-    /// named index, raised while saving an entity of type T. Any other
-    /// failure is left untranslated.
+    /// True only for a unique-key violation (SQL Server 2601/2627, PostgreSQL 23505) on the
+    /// named index, raised while saving an entity of type T. Any other failure is left
+    /// untranslated.
     /// </summary>
     private static bool IsUniqueViolation<T>(DbUpdateException exception, string indexName)
     {
@@ -174,6 +179,9 @@ public class UnitOfWork : IUnitOfWork
         {
             if (inner is SqlException sql && (sql.Number == 2601 || sql.Number == 2627)
                 && sql.Message.Contains(indexName, StringComparison.Ordinal))
+                return true;
+            if (inner is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation
+                && pg.ConstraintName == indexName)
                 return true;
         }
 
@@ -189,6 +197,9 @@ public class UnitOfWork : IUnitOfWork
         {
             if (inner is SqlException sql && (sql.Number == 2601 || sql.Number == 2627)
                 && sql.Message.Contains("IX_Flights_UserId_Date", StringComparison.Ordinal))
+                return true;
+            if (inner is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation
+                && pg.ConstraintName == "IX_Flights_UserId_Date")
                 return true;
         }
 

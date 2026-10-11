@@ -5,12 +5,10 @@ using SkyShift.Domain.Exceptions;
 namespace SkyShift.Application.UseCases.DeleteVehicle;
 
 /// <summary>
-/// Deletes a fleet vehicle only while it is Available and has no assignment or flight history;
-/// vehicles with history are kept (retire them instead) and nothing is cascaded. The vehicle is
-/// read with an update lock in the same Serializable transaction as the history check, and the
-/// DELETE carries its RowVersion, so a concurrent assignment and deletion cannot both succeed.
-/// Deleting the row returns its catalog model to the creation list, because a model counts as used
-/// only while a vehicle row references it.
+/// Deletes a fleet vehicle only while it is Available and has no assignment or flight history; vehicles
+/// with history are kept (retire them instead) and nothing is cascaded. The vehicle is read with a row
+/// lock in the same transaction as the history check, so a concurrent assignment and deletion cannot
+/// both succeed, and deleting it returns its catalog model to the creation list.
 /// </summary>
 public class DeleteVehicleUseCase
 {

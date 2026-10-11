@@ -6,10 +6,10 @@ using SkyShift.Domain.Entities;
 namespace SkyShift.Application.UseCases.SelectVehicle;
 
 /// <summary>
-/// Orchestrates vehicle selection; Vehicle.Assign() decides whether the vehicle can be assigned,
-/// and VehicleAssignment.Create() sets the trial period. One active assignment per user is enforced
-/// here with ActiveAssignmentExistsException. Transactions and concurrency handling are
-/// Infrastructure concerns behind the repositories and IUnitOfWork.
+/// Orchestrates vehicle selection: Vehicle.Assign() decides whether the vehicle can be assigned,
+/// VehicleAssignment.Create() sets the trial period, and one active assignment per user is enforced
+/// with ActiveAssignmentExistsException. Transactions and concurrency handling are Infrastructure
+/// concerns behind the repositories and IUnitOfWork.
 /// </summary>
 public class SelectVehicleUseCase
 {

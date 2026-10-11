@@ -1,9 +1,9 @@
 namespace SkyShift.Domain.Exceptions;
 
 /// <summary>
-/// Expected not-found result for a Vehicle id. Derives from KeyNotFoundException,
-/// like CatalogItemNotFoundException. Maps to 404; a bare KeyNotFoundException
-/// (an unexpected bug) stays a 500.
+/// Expected not-found result for a Vehicle id, derived from KeyNotFoundException like
+/// CatalogItemNotFoundException. Maps to 404, while a bare KeyNotFoundException (an unexpected bug)
+/// stays a 500.
 /// </summary>
 public sealed class VehicleNotFoundException : KeyNotFoundException
 {

@@ -4,11 +4,10 @@ using SkyShift.Domain.Exceptions;
 namespace SkyShift.Domain.Entities;
 
 /// <summary>
-/// A curated road-car model that a Manager may add to the fleet; unlike Vehicle, it is not a fleet
-/// record with its own status or assignments. Every item has seats, a maximum road speed and short
-/// Hebrew and English descriptions, and each specification is Verified or Illustrative,
-/// independently of how the model was identified. Visual-inspiration items carry only illustrative
-/// values, and no item contains flight specifications.
+/// A curated road-car model that a Manager may add to the fleet; unlike Vehicle, it has no status or
+/// assignments of its own. Every item has seats, a maximum road speed and Hebrew and English
+/// descriptions, each specification marked Verified or Illustrative, and no item contains flight
+/// specifications.
 /// </summary>
 public class VehicleCatalogItem
 {

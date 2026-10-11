@@ -22,6 +22,17 @@ public class VehicleAssignmentRepository : IVehicleAssignmentRepository
         // unit -- see SkyShiftDbContext.EnsureTransactionAsync.
         await _context.EnsureTransactionAsync(cancellationToken);
 
+        // PostgreSQL runs this path at Read Committed, so "one active assignment per user"
+        // is serialized by locking the user's row first (SQL Server's Serializable range
+        // locks do this implicitly). A second selection by the same user waits here and
+        // then sees the first one's committed assignment. FOR NO KEY UPDATE still allows the
+        // foreign-key checks (FOR KEY SHARE) that other inserts take on the same row.
+        if (_context.Database.IsNpgsql())
+        {
+            await _context.Database.ExecuteSqlInterpolatedAsync(
+                $@"SELECT 1 FROM ""Users"" WHERE ""Id"" = {userId} FOR NO KEY UPDATE", cancellationToken);
+        }
+
         var now = DateTime.UtcNow;
 
         // Mirrors VehicleAssignment.IsActive's semantics exactly (inclusive

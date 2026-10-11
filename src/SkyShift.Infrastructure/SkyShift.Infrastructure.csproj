@@ -13,9 +13,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Exactly the 3 approved packages, no others. -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+    <!-- SQL Server (default) and PostgreSQL providers; the provider is selected by configuration.
+         All EF Core packages stay on the same 8.0 servicing patch. 8.0.31 brings the patched
+         transitive dependencies (Microsoft.Data.SqlClient 5.1.9 and through it Azure.Identity,
+         Microsoft.IdentityModel.*; System.Formats.Asn1 8.0.2; Microsoft.Extensions.Caching.Memory;
+         System.Text.Json via the Design package) instead of pinning them one by one. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.31" />
+    <!-- Latest PostgreSQL provider for EF Core 8 (requires EF Core >= 8.0.11 and Npgsql >= 8.0.6,
+         which includes the CVE-2024-32655 fix), so Npgsql needs no separate pin. -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.31">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

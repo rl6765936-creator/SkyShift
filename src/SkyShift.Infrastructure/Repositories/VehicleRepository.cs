@@ -25,16 +25,30 @@ public class VehicleRepository : IVehicleRepository
     // writer for the same vehicle waits here and then reads the committed state.
     // Without it both transactions hold shared locks on the row and deadlock when
     // each converts to an exclusive lock for its UPDATE/DELETE (error 1205).
+    // PostgreSQL takes the same lock with FOR UPDATE: a waiting transaction then reads
+    // the winner's committed row (or no row if it was deleted). xmin is selected
+    // explicitly because SELECT * does not return system columns.
     public async Task<Vehicle?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         await _context.EnsureTransactionAsync(cancellationToken);
 
-        if (!_context.Database.IsSqlServer())
-            return await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
+        if (_context.Database.IsSqlServer())
+        {
+            return await _context.Vehicles
+                .FromSqlInterpolated($"SELECT * FROM [Vehicles] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {id}")
+                .FirstOrDefaultAsync(cancellationToken);
+        }
 
-        return await _context.Vehicles
-            .FromSqlInterpolated($"SELECT * FROM [Vehicles] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {id}")
-            .FirstOrDefaultAsync(cancellationToken);
+        if (_context.Database.IsNpgsql())
+        {
+            // Not composed (no LIMIT wrapper), so the statement runs exactly as written.
+            var locked = await _context.Vehicles
+                .FromSqlInterpolated($@"SELECT *, xmin FROM ""Vehicles"" WHERE ""Id"" = {id} FOR UPDATE")
+                .ToListAsync(cancellationToken);
+            return locked.SingleOrDefault();
+        }
+
+        return await _context.Vehicles.FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
     }
 
     // Not part of the SelectVehicle critical path -- a plain listing query,

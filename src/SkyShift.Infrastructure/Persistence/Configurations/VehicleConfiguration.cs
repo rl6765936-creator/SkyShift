@@ -71,11 +71,9 @@ public class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");
 
-        // Shadow property: optimistic-concurrency token used to detect two
-        // concurrent SelectVehicle attempts against the same Vehicle
-        // (Problem 1). Kept out of the Domain entity -- RowVersion is a
-        // persistence concern, not a business concept.
-        builder.Property<byte[]>("RowVersion")
-            .IsRowVersion();
+        // The optimistic-concurrency shadow token (detects two concurrent SelectVehicle
+        // attempts against the same Vehicle, Problem 1) is provider-specific -- SQL Server
+        // rowversion, PostgreSQL xmin -- so it is mapped in SkyShiftDbContext.OnModelCreating.
+        // It stays out of the Domain entity: it is a persistence concern, not a business concept.
     }
 }

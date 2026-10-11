@@ -4,9 +4,8 @@ using SkyShift.Application.DTOs;
 namespace SkyShift.Application.UseCases.GetFlightStats;
 
 /// <summary>
-/// Aggregated Manager flight statistics. Loads all flights once via IFlightRepository.GetAllAsync
-/// and does the grouping here in Application. ActivityTrend is bucketed by the server CreatedAt
-/// date, never by the business Date.
+/// Aggregated Manager flight statistics, computed in Application from one IFlightRepository.GetAllAsync
+/// load. ActivityTrend is bucketed by the server CreatedAt date, never by the business Date.
 /// </summary>
 public class GetFlightStatsUseCase
 {

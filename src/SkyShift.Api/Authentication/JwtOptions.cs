@@ -3,10 +3,9 @@ using System.ComponentModel.DataAnnotations;
 namespace SkyShift.Api.Authentication;
 
 /// <summary>
-/// Configuration bound from the "Jwt" section; SigningKey comes only from configuration (User
-/// Secrets in Development), never from code. The [Required]/[Range] rules are validated at startup
-/// through ValidateDataAnnotations().ValidateOnStart() in Program.cs. A missing signing key
-/// therefore fails fast with a clear message instead of on the first token operation.
+/// Configuration bound from the "Jwt" section; SigningKey comes only from configuration (User Secrets
+/// or environment variables), never from code. The [Required]/[Range] rules are validated at startup,
+/// so a missing signing key fails fast instead of on the first token operation.
 /// </summary>
 public class JwtOptions
 {

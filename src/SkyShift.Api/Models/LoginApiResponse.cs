@@ -4,10 +4,9 @@ using SkyShift.Domain.Enums;
 namespace SkyShift.Api.Models;
 
 /// <summary>
-/// API-only response for successful registration and login. Carries the
-/// JWT Token alongside the basic identity fields. This type belongs
-/// exclusively to SkyShift.Api -- Application's RegisterUserResponse and
-/// LoginResponse remain unchanged and unaware that tokens exist.
+/// API-only response for successful registration and login: the JWT Token alongside the basic identity
+/// fields. It belongs to SkyShift.Api only, so Application's RegisterUserResponse and LoginResponse
+/// stay unaware of tokens.
 /// </summary>
 public class LoginApiResponse
 {

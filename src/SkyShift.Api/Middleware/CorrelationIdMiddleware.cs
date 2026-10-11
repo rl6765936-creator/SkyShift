@@ -4,10 +4,9 @@ using Microsoft.Extensions.Logging;
 namespace SkyShift.Api.Middleware;
 
 /// <summary>
-/// Gives every request a CorrelationId, reusing the inbound X-Correlation-Id header when present,
-/// and returns it in the response header. It runs first in the pipeline and opens a logging scope,
-/// so every log line for the request, including errors logged by SkyShiftExceptionHandler, carries
-/// the id. It also writes one Information line per request once the response status is known.
+/// Gives every request a CorrelationId, reusing the inbound X-Correlation-Id header when present, and
+/// returns it in the response header. It runs first and opens a logging scope, so every log line for
+/// the request carries the id, and it logs one Information line per request.
 /// </summary>
 public class CorrelationIdMiddleware
 {

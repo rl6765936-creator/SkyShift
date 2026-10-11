@@ -11,6 +11,9 @@
   <ItemGroup>
     <ProjectReference Include="..\SkyShift.Application\SkyShift.Application.csproj" />
     <ProjectReference Include="..\SkyShift.Infrastructure\SkyShift.Infrastructure.csproj" />
+    <!-- Only the PostgreSQL migrations (loaded by name when Database:Provider is PostgreSQL);
+         no code in the Api uses its types. -->
+    <ProjectReference Include="..\SkyShift.Infrastructure.PostgreSql\SkyShift.Infrastructure.PostgreSql.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,7 +26,7 @@
          startup project (SkyShift.Api), independent of the reference
          already present in SkyShift.Infrastructure (PrivateAssets="all"
          does not flow transitively through ProjectReference). -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.31">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

@@ -16,9 +16,8 @@ using Xunit;
 namespace SkyShift.Tests.Concurrency;
 
 /// <summary>
-/// Real SQL Server checks for the catalog. Each test creates and drops its
-/// own uniquely named database (SkyShiftTests_*) and never touches the
-/// application database. Skipped unless SKYSHIFT_TEST_SQLSERVER is set.
+/// Real SQL Server checks for the catalog, each in its own temporary SkyShiftTests_* database that is
+/// dropped afterwards, never the application database. Skipped unless SKYSHIFT_TEST_SQLSERVER is set.
 /// </summary>
 public class CatalogSqlServerTests
 {

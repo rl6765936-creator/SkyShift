@@ -6,12 +6,10 @@ using SkyShift.Domain.Exceptions;
 namespace SkyShift.Api.Middleware;
 
 /// <summary>
-/// Translates known, specific exception types into ProblemDetails with a status code and safe
-/// message; any other exception, including a bare InvalidOperationException or
-/// KeyNotFoundException, becomes a generic 500. Expected errors include code, messageHe and
-/// messageEn, and detail is Hebrew when Accept-Language is Hebrew. Validation and not-found errors
-/// are logged at Information, conflicts and rejected logins at Warning, and unexpected failures at
-/// Error.
+/// Translates known, specific exception types into ProblemDetails with code, messageHe and messageEn
+/// (detail is Hebrew when Accept-Language is Hebrew); any other exception becomes a generic 500.
+/// Validation and not-found errors are logged at Information, conflicts and rejected logins at Warning,
+/// and unexpected failures at Error.
 /// </summary>
 public class SkyShiftExceptionHandler : IExceptionHandler
 {

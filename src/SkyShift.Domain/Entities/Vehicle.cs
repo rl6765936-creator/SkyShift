@@ -4,10 +4,9 @@ using SkyShift.Domain.Exceptions;
 namespace SkyShift.Domain.Entities;
 
 /// <summary>
-/// A fleet vehicle that users can be assigned for a trial period. Assign() enforces the
-/// single-assignment rule on a loaded instance: it succeeds only while the status is Available.
-/// Concurrent assignment is handled in Infrastructure (update lock in a Serializable transaction
-/// plus the RowVersion token).
+/// A fleet vehicle that users can be assigned for a trial period; Assign() succeeds only while the
+/// status is Available. Concurrent assignment is handled in Infrastructure (a row lock in the
+/// critical-path transaction plus a concurrency token).
 /// </summary>
 public class Vehicle
 {
@@ -46,10 +45,8 @@ public class Vehicle
     public bool IsPersonalExperimental { get; private set; }
 
     /// <summary>
-    /// Server-generated creation timestamp (UTC). Always supplied by the
-    /// caller (CreateVehicleUseCase, using DateTime.UtcNow) -- never a
-    /// client-controlled value. Exists so Manager fleet-growth and future
-    /// lifetime-utilization statistics do not depend on any client input.
+    /// Server-generated UTC creation timestamp, always supplied by CreateVehicleUseCase and never by
+    /// the client. It lets Manager fleet statistics avoid depending on client input.
     /// </summary>
     public DateTime CreatedAt { get; private set; }
 
@@ -77,11 +74,9 @@ public class Vehicle
     }
 
     /// <summary>
-    /// Assigns the vehicle to a user for the trial period.
-    /// Only legal from Available; otherwise the vehicle is already taken
-    /// (or otherwise unusable), which is a business-rule violation.
-    /// Creating the related VehicleAssignment record is an Application-layer
-    /// orchestration responsibility — see VehicleAssignment.
+    /// Assigns the vehicle to a user for the trial period; only legal from Available, otherwise the
+    /// vehicle is taken or unusable. Creating the related VehicleAssignment record is the Application
+    /// layer's responsibility.
     /// </summary>
     public void Assign()
     {
@@ -101,9 +96,9 @@ public class Vehicle
     }
 
     /// <summary>
-    /// Manager-driven status transitions; each method enforces its own preconditions, and there is
-    /// no generic status setter. None of them can start from InUse, because an assigned vehicle's
-    /// status must not be forced while its assignment is active. Retired is terminal.
+    /// Manager-driven status transitions; each method enforces its own preconditions, and there is no
+    /// generic status setter. None of them can start from InUse while an assignment is active, and
+    /// Retired is terminal.
     /// </summary>
     public void Retire()
     {

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    PostgreSQL migrations only, kept apart from the SQL Server migrations in
+    SkyShift.Infrastructure (EF Core supports one migrations set per provider per assembly).
+    The DbContext, mappings and repositories stay in SkyShift.Infrastructure.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>SkyShift.Infrastructure.PostgreSql</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SkyShift.Infrastructure\SkyShift.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

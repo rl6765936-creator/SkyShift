@@ -4,11 +4,9 @@ using SkyShift.Domain.Entities;
 namespace SkyShift.Application.UseCases.SeedDemoUsers;
 
 /// <summary>
-/// Creates the two documented demo accounts (one User, one Manager) at startup, and never seeds
-/// vehicles, flights or assignments. It is idempotent: each account is looked up by email and
-/// created only if missing, using User.Create, the existing IPasswordHasher and, for the Manager,
-/// User.PromoteToManager(). The credentials are intentionally public demo values documented in the
-/// README, not secrets.
+/// Creates the two documented, intentionally public demo accounts (one User, one Manager) at startup,
+/// and never seeds vehicles, flights or assignments. It is idempotent: each account is looked up by
+/// email and created only if missing.
 /// </summary>
 public class SeedDemoUsersUseCase
 {

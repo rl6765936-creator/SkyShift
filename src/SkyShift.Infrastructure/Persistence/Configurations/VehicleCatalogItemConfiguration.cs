@@ -6,11 +6,10 @@ using SkyShift.Domain.Enums;
 namespace SkyShift.Infrastructure.Persistence.Configurations;
 
 /// <summary>
-/// Configures the catalog table and its deterministic seed; ids are explicit so each id permanently
-/// maps to the frontend asset /catalog/car-NN.webp. Every row has seats and a maximum road speed,
-/// each marked Verified (official source, see CATALOG-MANIFEST.md) or Illustrative, and
-/// visual-inspiration rows carry only illustrative values. The images show added propellers, but no
-/// row claims a road car can fly or stores a flight specification.
+/// Configures the catalog table and its deterministic 22-item seed; ids are explicit so each id
+/// permanently maps to the frontend asset /catalog/car-NN.webp. Every row has seats and a maximum road
+/// speed marked Verified (see CATALOG-MANIFEST.md) or Illustrative, and no row stores a flight
+/// specification.
 /// </summary>
 public class VehicleCatalogItemConfiguration : IEntityTypeConfiguration<VehicleCatalogItem>
 {

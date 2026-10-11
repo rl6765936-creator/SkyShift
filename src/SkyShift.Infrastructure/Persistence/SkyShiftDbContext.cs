@@ -6,12 +6,11 @@ using SkyShift.Domain.Entities;
 namespace SkyShift.Infrastructure.Persistence;
 
 /// <summary>
-/// EF Core DbContext that also owns an ambient Serializable transaction, so reads and the following
-/// writes of a critical path (vehicle selection, vehicle deletion) run in one transaction without
-/// Application knowing about it. Only the repository methods on those paths call
-/// EnsureTransactionAsync, which opens the transaction once per scope; UnitOfWork commits or rolls
-/// it back, and display reads never open it. A transaction left open by a use case that throws
-/// before saving is rolled back when the scope's DbContext is disposed.
+/// EF Core DbContext that also owns an ambient transaction (Serializable on SQL Server, Read Committed
+/// with explicit row locks on PostgreSQL) for the critical paths, vehicle selection and deletion,
+/// without Application knowing about it. Only those repository methods open it, UnitOfWork commits or
+/// rolls it back, and a transaction left open by a failing use case is rolled back when the DbContext
+/// is disposed.
 /// </summary>
 public class SkyShiftDbContext : DbContext
 {
@@ -31,6 +30,16 @@ public class SkyShiftDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SkyShiftDbContext).Assembly);
+
+        if (Database.IsNpgsql())
+        {
+            PostgreSqlModel.Apply(modelBuilder);
+        }
+        else
+        {
+            // SQL Server rowversion (also used by the InMemory tests); PostgreSQL uses xmin.
+            modelBuilder.Entity<Vehicle>().Property<byte[]>("RowVersion").IsRowVersion();
+        }
     }
 
     internal async Task EnsureTransactionAsync(CancellationToken cancellationToken = default)
@@ -38,8 +47,16 @@ public class SkyShiftDbContext : DbContext
         if (_currentTransaction is not null)
             return;
 
-        _currentTransaction = await Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+        _currentTransaction = await Database.BeginTransactionAsync(CriticalPathIsolationLevel, cancellationToken);
     }
+
+    // SQL Server: Serializable (range locks plus the UPDLOCK vehicle read). PostgreSQL: Read
+    // Committed plus explicit row locks (FOR UPDATE on the vehicle, FOR NO KEY UPDATE on the
+    // user). Under PostgreSQL's Serializable, a transaction that waited for a row lock fails
+    // with 40001 instead of reading the winner's committed row, which would turn the expected
+    // 404/409 outcomes into errors; at Read Committed the locked read returns the current row.
+    private IsolationLevel CriticalPathIsolationLevel =>
+        Database.IsNpgsql() ? IsolationLevel.ReadCommitted : IsolationLevel.Serializable;
 
     internal async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
     {
